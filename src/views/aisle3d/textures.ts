@@ -23,23 +23,42 @@ export function signTexture(title: string): HTMLCanvasElement {
   return canvas;
 }
 
-export function packFaceTexture(kind: string, brand: string, fill: string): HTMLCanvasElement {
+export function packFaceTexture(input: {
+  kind: string;
+  brand: string;
+  fill: string;
+  price: string;
+  storeBrand?: boolean;
+}): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
   canvas.width = 256;
   canvas.height = 512;
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
-  ctx.fillStyle = fill;
+  ctx.fillStyle = input.fill;
   ctx.fillRect(0, 0, 256, 512);
   ctx.fillStyle = "#fff8ef";
-  ctx.fillRect(18, 300, 220, 170);
+  ctx.fillRect(16, 168, 224, 328);
+  if (input.storeBrand) {
+    ctx.fillStyle = "#c45c26";
+    ctx.fillRect(16, 168, 224, 46);
+    ctx.fillStyle = "#fff8ef";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = "700 22px ui-sans-serif, system-ui, sans-serif";
+    ctx.fillText("MARCA BLANCA", 128, 191);
+  }
   ctx.fillStyle = "#1b1713";
   ctx.textAlign = "center";
-  ctx.font = "700 28px ui-sans-serif, system-ui, sans-serif";
-  wrap(ctx, kind.toUpperCase(), 128, 360, 200);
+  ctx.textBaseline = "alphabetic";
+  const kindTop = input.storeBrand ? 250 : 228;
+  ctx.font = "700 30px ui-sans-serif, system-ui, sans-serif";
+  wrap(ctx, input.kind.toUpperCase(), 128, kindTop, 200);
+  ctx.font = "700 44px ui-sans-serif, system-ui, sans-serif";
+  ctx.fillText(input.price, 128, 360);
   ctx.font = "400 22px ui-sans-serif, system-ui, sans-serif";
   ctx.fillStyle = "#5c534a";
-  ctx.fillText(brand, 128, 430);
+  ctx.fillText(input.brand, 128, 408);
   return canvas;
 }
 
@@ -52,7 +71,7 @@ function wrap(ctx: CanvasRenderingContext2D, text: string, x: number, y: number,
     if (ctx.measureText(next).width > max && line) {
       ctx.fillText(line, x, row);
       line = word;
-      row += 32;
+      row += 30;
     } else {
       line = next;
     }
