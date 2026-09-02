@@ -1,0 +1,10 @@
+node_modules
+dist
+test-results
+playwright-report
+blob-report
+*.local
+.env*
+.DS_Store
+tsconfig.app.tsbuildinfo
+tsconfig.node.tsbuildinfo
