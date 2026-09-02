@@ -1,6 +1,6 @@
-export type AisleId = "entrada" | "lacteos" | "despensa" | "limpieza" | "fresco";
+export type AisleId = "entrada" | "lacteos" | "despensa" | "limpieza" | "fresco" | "moda";
 
-export type NeedId = "leche" | "arroz" | "jabon" | "tomate";
+export type NeedId = "leche" | "arroz" | "jabon" | "tomate" | "vestir";
 
 export type Unit = "l" | "kg" | "ud";
 
@@ -15,6 +15,7 @@ export type Sku = {
   grams: number;
   unit: Unit;
   packHint?: string;
+  why?: string;
 };
 
 export type Aisle = {
@@ -40,11 +41,32 @@ export type Witness = {
   detail: string;
 };
 
+export type Trip = {
+  needs: NeedId[];
+  done: NeedId[];
+};
+
+export type TicketLine = {
+  skuId: string;
+  name: string;
+  qty: number;
+  total: number;
+};
+
+export type Ticket = {
+  lines: TicketLine[];
+  total: number;
+  at: number;
+};
+
 export type State = {
   player: { aisleId: AisleId };
   stand: Stand | null;
   focusSkuId: string | null;
+  previewSkuId: string | null;
   basket: BasketLine[];
+  trip: Trip | null;
+  ticket: Ticket | null;
   lastWitness: Witness | null;
   pendingNeed: string | null;
 };

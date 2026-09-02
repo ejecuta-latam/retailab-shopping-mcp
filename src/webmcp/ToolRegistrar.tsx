@@ -6,11 +6,16 @@ import {
   SHOW_STAND_SCHEMA,
   SKU_SCHEMA,
   runAddToCart,
+  runCheckout,
+  runCompareOptions,
   runFocusProduct,
+  runGiveUpProduct,
   runGoToAisle,
   runLookStand,
+  runNextStand,
   runRemoveFromCart,
   runShowStand,
+  runVisualizeProduct,
 } from "./tools";
 
 export function ToolRegistrar() {
@@ -21,7 +26,7 @@ export function ToolRegistrar() {
   useWebMCP({
     name: "show_stand",
     description:
-      "Walk the shopper to the aisle for a need and open a stand with up to 4 real options. Use when they say they need something (e.g. leche/milk). Then ASK which of the 4 they want. Do not add to the cart until they choose.",
+      "Walk the shopper to the aisle and open a stand of up to 4 options. Use when they name one need or a list (e.g. leche, arroz y jabon). Opens the first need and remembers the rest. Then ASK which of the 4 they want. Do not add until they choose.",
     inputSchema: SHOW_STAND_SCHEMA,
     execute: runShowStand,
   });
@@ -36,11 +41,38 @@ export function ToolRegistrar() {
   });
 
   useWebMCP({
+    name: "compare_options",
+    description:
+      "Advise on the 4 open stand options: unit price, store brand vs brand, and a one-line why. Use when they ask which is cheaper, healthier, or the difference. Do not add to the cart.",
+    inputSchema: EMPTY_SCHEMA,
+    annotations: { readOnlyHint: true },
+    enabled: hasStand,
+    execute: runCompareOptions,
+  });
+
+  useWebMCP({
     name: "go_to_aisle",
     description:
       "Walk to an aisle without opening a stand. Use to wander. Prefer show_stand when they named a product.",
     inputSchema: AISLE_SCHEMA,
     execute: runGoToAisle,
+  });
+
+  useWebMCP({
+    name: "visualize_product",
+    description:
+      "Bring the camera close to a clothing item on the Moda stand so the shopper can see the model. Only works for vestir SKUs. Does not add to the cart. After this they can add_to_cart or give_up_product.",
+    inputSchema: SKU_SCHEMA,
+    enabled: hasStand,
+    execute: runVisualizeProduct,
+  });
+
+  useWebMCP({
+    name: "give_up_product",
+    description:
+      "Put the previewed garment back. Use when they say déjalo / no lo quiero after visualize_product. Does not add to the cart.",
+    inputSchema: EMPTY_SCHEMA,
+    execute: runGiveUpProduct,
   });
 
   useWebMCP({
@@ -66,6 +98,22 @@ export function ToolRegistrar() {
     inputSchema: SKU_SCHEMA,
     enabled: hasBasket,
     execute: runRemoveFromCart,
+  });
+
+  useWebMCP({
+    name: "next_stand",
+    description:
+      "Walk to the next need still on the trip list and open that stand. Use after they picked something and want to continue (e.g. ahora el arroz). Does not add to the cart.",
+    inputSchema: EMPTY_SCHEMA,
+    execute: runNextStand,
+  });
+
+  useWebMCP({
+    name: "checkout",
+    description:
+      "Close the trip only after the shopper says they are done (ya está). Prints the ticket and walks to the door. Do not call this yourself.",
+    inputSchema: EMPTY_SCHEMA,
+    execute: runCheckout,
   });
 
   return null;

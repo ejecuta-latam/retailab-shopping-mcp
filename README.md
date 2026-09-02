@@ -19,22 +19,25 @@ npm run dev
 
 Open the URL in **ChatGPT’s in-app browser** (WebMCP is on by default) or Chrome 149+ with `chrome://flags/#enable-webmcp-testing`.
 
-Say: **necesito leche**. You should land in Lácteos, see four milks, and get asked which one. Then: **la de avena, añádela**.
+Say: **necesito leche, arroz y jabón**. You land in Lácteos with that list remembered. After you pick, say **sigue** / **ahora el arroz**. When you are done: **ya está** — ticket and the door.
 
-Needs that work: `leche`, `arroz`, `jabon`, `tomate` (and English aliases).
-
-The chips on the page call the same domain actions as the tools, so you can walk the store without an agent.
+Needs that work: `leche`, `arroz`, `jabon`, `tomate`, `vestir` / dress (and English aliases). In Moda you can **Ver** a garment up close and **Dejar** it without adding.
 
 ## Tools
 
 | Tool | Role |
 | --- | --- |
-| `show_stand` | Walk to the aisle and open up to 4 options |
+| `show_stand` | Walk to the aisle and open up to 4 options. A list of needs becomes one trip |
 | `look_stand` | Re-read the stand |
+| `compare_options` | Advise on the four (unit price, marca blanca, a one-line why). Does not add |
+| `next_stand` | Walk to the next need still on the trip |
 | `go_to_aisle` | Wander; closes the stand |
 | `focus_product` | Highlight one of the four |
+| `visualize_product` | Near camera on a Moda garment. Does not add |
+| `give_up_product` | Put the previewed garment back |
 | `add_to_cart` | After the shopper chooses |
 | `remove_from_cart` | Take a line out |
+| `checkout` | After the shopper says they are done: ticket and the door |
 
 There is no `searchAndAdd`.
 

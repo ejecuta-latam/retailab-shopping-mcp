@@ -1,6 +1,7 @@
 import * as THREE from "three";
-import { addToCart, showStand } from "../../domain/actions";
-import { aisleById, skuById, skusInAisle } from "../../domain/catalog";
+import { addToCart, showStand, visualizeProduct } from "../../domain/actions";
+import { aisleById, canVisualize, formatMoney, isStoreBrand, skuById, skusInAisle } from "../../domain/catalog";
+import { makeGarment } from "./garments";
 import type { Sku } from "../../domain/types";
 import type { AisleId, State } from "../../domain/types";
 import { AISLE_X, AISLE_Z0, AISLE_Z1, cameraRig, PRODUCT_AISLES } from "./layout";
@@ -17,6 +18,7 @@ function packSize(sku: Sku): [number, number, number] {
   if (sku.need === "leche") return [0.16, 0.4, 0.12];
   if (sku.need === "arroz") return [0.18, 0.28, 0.11];
   if (sku.need === "jabon") return [0.14, 0.26, 0.1];
+  if (sku.need === "vestir") return [0.22, 0.7, 0.14];
   return [0.2, 0.16, 0.16];
 }
 
@@ -36,8 +38,20 @@ function packColor(sku: Sku): string {
     pera: "#c46b4a",
     cherry: "#b33b32",
     triturado: "#8a3a2c",
+    vestido: "#2c2432",
+    camisa: "#efe8dc",
+    pantalon: "#3a4d68",
   };
   return byKind[sku.kind] ?? aisleById(sku.aisleId).hue;
+}
+
+function skuFromObject(object: THREE.Object3D | undefined): string | undefined {
+  let current: THREE.Object3D | undefined = object;
+  while (current) {
+    if (typeof current.userData.skuId === "string") return current.userData.skuId;
+    current = current.parent ?? undefined;
+  }
+  return undefined;
 }
 
 export class AisleScene {
@@ -50,6 +64,9 @@ export class AisleScene {
   private target = cameraRig("entrada", false);
   private look = new THREE.Vector3(...this.target.lookAt);
   private standGroup = new THREE.Group();
+  private crateGroup = new THREE.Group();
+  private crateFill = new THREE.Group();
+  private lastCrateKey = "";
   private packMeshes = new Map<string, THREE.Object3D>();
   private shelfClicks: THREE.Object3D[] = [];
   private raycaster = new THREE.Raycaster();
@@ -80,7 +97,9 @@ export class AisleScene {
 
     this.buildStore();
     this.standGroup.name = "stand";
-    this.scene.add(this.standGroup);
+    this.crateGroup.name = "crate";
+    this.buildCrate();
+    this.scene.add(this.standGroup, this.crateGroup);
 
     this.resize();
     this.observer = new ResizeObserver(this.resize);
@@ -92,8 +111,14 @@ export class AisleScene {
   }
 
   sync(state: State): void {
-    this.target = cameraRig(state.player.aisleId, state.stand !== null);
+    this.target = cameraRig(
+      state.player.aisleId,
+      state.stand !== null,
+      state.ticket !== null,
+      state.previewSkuId !== null,
+    );
     this.refreshStand(state);
+    this.refreshCrate(state);
     this.purgeGhosts();
     if (state.lastWitness && state.lastWitness.at !== this.lastWitnessAt) {
       this.lastWitnessAt = state.lastWitness.at;
@@ -102,9 +127,11 @@ export class AisleScene {
     for (const [skuId, mesh] of this.packMeshes) {
       if (this.take?.skuId === skuId) continue;
       mesh.visible = true;
-      mesh.scale.setScalar(skuId === state.focusSkuId ? 1.08 : 1);
+      const preview = state.previewSkuId === skuId;
+      const hot = skuId === state.focusSkuId;
+      mesh.scale.setScalar(preview ? 1.28 : hot ? 1.08 : 1);
     }
-    this.applyFocus(state.focusSkuId);
+    this.applyFocus(state.previewSkuId ?? state.focusSkuId);
   }
 
   dispose(): void {
@@ -151,9 +178,12 @@ export class AisleScene {
     this.pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
     this.raycaster.setFromCamera(this.pointer, this.camera);
     const standHits = this.raycaster.intersectObjects([...this.packMeshes.values()], true);
-    const standId = standHits[0]?.object.userData.skuId as string | undefined;
+    const standHit = standHits[0]?.object;
+    const standId = skuFromObject(standHit);
     if (standId) {
-      addToCart(standId);
+      const sku = skuById(standId);
+      if (sku && canVisualize(sku)) visualizeProduct(standId);
+      else addToCart(standId);
       return;
     }
     const shelfHits = this.raycaster.intersectObjects(this.shelfClicks, true);
@@ -211,7 +241,8 @@ export class AisleScene {
       [-7.85, -4.15],
       [-1.85, 1.85],
       [4.15, 7.85],
-      [10.15, 20.6],
+      [10.15, 13.85],
+      [16.15, 20.6],
     ];
     for (const [a, b] of spans) {
       const width = b - a;
@@ -225,6 +256,7 @@ export class AisleScene {
   }
 
   private buildAisle(aisleId: Exclude<AisleId, "entrada">): THREE.Group {
+    if (aisleId === "moda") return this.buildModaAisle();
     const aisle = aisleById(aisleId);
     const group = new THREE.Group();
     group.position.x = AISLE_X[aisleId];
@@ -299,12 +331,79 @@ export class AisleScene {
     return group;
   }
 
+  private buildModaAisle(): THREE.Group {
+    const aisle = aisleById("moda");
+    const group = new THREE.Group();
+    group.position.x = AISLE_X.moda;
+    const metal = new THREE.MeshStandardMaterial({ color: "#2a241e", roughness: 0.5 });
+    const wood = new THREE.MeshStandardMaterial({ color: "#5c4634", roughness: 0.7 });
+
+    for (const side of [-1, 1] as const) {
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, AISLE_LEN - 0.4), metal);
+      rail.position.set(side * 1.15, 1.85, 0);
+      group.add(rail);
+      for (const z of [AISLE_Z0 + 0.2, 0, AISLE_Z1 - 0.2]) {
+        const post = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.9, 0.05), metal);
+        post.position.set(side * 1.15, 0.95, z);
+        group.add(post);
+      }
+      const kick = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.12, AISLE_LEN), wood);
+      kick.position.set(side * 1.15, 0.06, 0);
+      group.add(kick);
+    }
+
+    const skus = skusInAisle("moda");
+    skus.forEach((sku, index) => {
+      const side = index % 2 === 0 ? -1 : 1;
+      const slot = Math.floor(index / 2);
+      const garment = makeGarment(sku, 0.85);
+      garment.position.set(side * 1.05, 0.72, 2.6 - slot * 1.4);
+      garment.rotation.y = side > 0 ? Math.PI / 2 : -Math.PI / 2;
+      this.shelfClicks.push(garment);
+      group.add(garment);
+    });
+
+    const lamp = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.06, AISLE_LEN - 0.4),
+      new THREE.MeshStandardMaterial({ color: "#fff6d6", emissive: "#f4e0a8", emissiveIntensity: 1.8 }),
+    );
+    lamp.position.set(0, 3.28, 0);
+    group.add(lamp);
+    const light = new THREE.PointLight("#fff1d0", 18, 9, 2);
+    light.position.set(0, 3.05, 0);
+    group.add(light);
+
+    const sign = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 0.42, 0.08),
+      new THREE.MeshStandardMaterial({
+        map: canvasMap(signTexture(aisle.name)),
+        roughness: 0.45,
+      }),
+    );
+    sign.position.set(0, 2.55, AISLE_Z1 + 0.2);
+    group.add(sign);
+    return group;
+  }
+
+  private makeDisplay(sku: Sku, faceScale: number): THREE.Object3D {
+    if (canVisualize(sku)) return makeGarment(sku, faceScale);
+    return this.makePack(sku, faceScale);
+  }
+
   private makePack(sku: Sku, faceScale: number): THREE.Mesh {
     const [w, h, d] = packSize(sku);
     const color = packColor(sku);
     const body = new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0.03 });
     const face = new THREE.MeshStandardMaterial({
-      map: canvasMap(packFaceTexture(sku.kind, sku.brand, color)),
+      map: canvasMap(
+        packFaceTexture({
+          kind: sku.kind,
+          brand: sku.brand,
+          fill: color,
+          price: formatMoney(sku.price),
+          storeBrand: isStoreBrand(sku),
+        }),
+      ),
       roughness: 0.48,
     });
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(w * faceScale, h * faceScale, d * faceScale), [
@@ -356,12 +455,12 @@ export class AisleScene {
     state.stand.skuIds.forEach((skuId, index) => {
       const sku = skuById(skuId);
       if (!sku) return;
-      const pack = this.makePack(sku, 1.15);
-      const [, h] = packSize(sku);
-      pack.position.set(-0.78 + index * 0.52, 0.955 + (h * 1.15) / 2, 0);
-      pack.userData.origin = pack.position.clone();
-      this.standGroup.add(pack);
-      this.packMeshes.set(skuId, pack);
+      const item = this.makeDisplay(sku, canVisualize(sku) ? 0.95 : 1.15);
+      const y = canVisualize(sku) ? 0.955 : 0.955 + (packSize(sku)[1] * 1.15) / 2;
+      item.position.set(-0.78 + index * 0.52, y, 0);
+      item.userData.origin = item.position.clone();
+      this.standGroup.add(item);
+      this.packMeshes.set(skuId, item);
     });
   }
 
@@ -371,7 +470,6 @@ export class AisleScene {
     for (const [skuId, mesh] of this.packMeshes) {
       if (this.take?.skuId === skuId) continue;
       const hot = skuId === focusSkuId;
-      mesh.scale.setScalar(hot ? 1.08 : 1);
       mesh.traverse((child) => {
         if (child instanceof THREE.Mesh && child.material instanceof THREE.MeshStandardMaterial) {
           child.material.emissive = hex(hot ? "#c45c26" : "#000000");
@@ -409,10 +507,79 @@ export class AisleScene {
     this.take = null;
   }
 
+  private buildCrate(): void {
+    const wood = new THREE.MeshStandardMaterial({ color: "#6a4a2e", roughness: 0.7 });
+    const slat = new THREE.MeshStandardMaterial({ color: "#8a6238", roughness: 0.62 });
+    const floor = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.04, 0.38), wood);
+    floor.position.y = 0.12;
+    floor.castShadow = true;
+    floor.receiveShadow = true;
+    this.crateGroup.add(floor);
+    for (const [x, z, w, d] of [
+      [-0.24, 0, 0.04, 0.38],
+      [0.24, 0, 0.04, 0.38],
+      [0, -0.17, 0.52, 0.04],
+      [0, 0.17, 0.52, 0.04],
+    ] as const) {
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, d), slat);
+      wall.position.set(x, 0.24, z);
+      wall.castShadow = true;
+      this.crateGroup.add(wall);
+    }
+    const tag = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.07, 0.02),
+      new THREE.MeshStandardMaterial({ color: "#1b1713", roughness: 0.5 }),
+    );
+    tag.position.set(0, 0.36, 0.2);
+    this.crateGroup.add(tag);
+    this.crateFill.name = "crate-fill";
+    this.crateGroup.add(this.crateFill);
+    this.crateGroup.visible = false;
+  }
+
+  private refreshCrate(state: State): void {
+    const show = state.ticket === null && (state.stand !== null || state.basket.length > 0);
+    this.crateGroup.visible = show;
+    if (!show) {
+      this.crateFill.clear();
+      this.lastCrateKey = "";
+      return;
+    }
+
+    if (state.player.aisleId === "entrada") {
+      this.crateGroup.position.set(0.7, 0, 8.4);
+    } else {
+      this.crateGroup.position.set(AISLE_X[state.player.aisleId] + 0.62, 0, 2.72);
+    }
+    this.crateGroup.rotation.y = -0.15;
+
+    const key = state.basket.map((line) => `${line.skuId}:${line.qty}`).join("|");
+    if (key === this.lastCrateKey) return;
+    this.lastCrateKey = key;
+    this.crateFill.clear();
+
+    let slot = 0;
+    for (const line of state.basket) {
+      const sku = skuById(line.skuId);
+      if (!sku) continue;
+      for (let qty = 0; qty < line.qty && slot < 8; qty += 1) {
+        const pack = this.makeDisplay(sku, canVisualize(sku) ? 0.28 : 0.52);
+        const [, h] = packSize(sku);
+        const col = slot % 2;
+        const row = Math.floor(slot / 2);
+        const y = canVisualize(sku) ? 0.16 + row * 0.13 : 0.16 + (h * 0.52) / 2 + row * 0.13;
+        pack.position.set(-0.1 + col * 0.2, y, 0);
+        pack.userData.crateItem = true;
+        this.crateFill.add(pack);
+        slot += 1;
+      }
+    }
+  }
+
   private purgeGhosts(): void {
     const doomed: THREE.Object3D[] = [];
     for (const child of this.scene.children) {
-      if (child === this.standGroup) continue;
+      if (child === this.standGroup || child === this.crateGroup) continue;
       if (child.userData.flyGhost || child.userData.skuId) doomed.push(child);
     }
     for (const leftover of doomed) this.scene.remove(leftover);

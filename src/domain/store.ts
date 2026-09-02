@@ -5,7 +5,10 @@ export function initialState(): State {
     player: { aisleId: "entrada" },
     stand: null,
     focusSkuId: null,
+    previewSkuId: null,
     basket: [],
+    trip: null,
+    ticket: null,
     lastWitness: null,
     pendingNeed: null,
   };

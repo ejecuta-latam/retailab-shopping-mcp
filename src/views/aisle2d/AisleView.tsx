@@ -6,7 +6,7 @@ import { Minimap } from "./Minimap";
 import { Stand } from "./Stand";
 
 export function AisleView() {
-  const { player, stand, focusSkuId, basket } = useStore();
+  const { player, stand, focusSkuId, previewSkuId, basket } = useStore();
 
   return (
     <div className="aisle-view">
@@ -14,7 +14,12 @@ export function AisleView() {
       <div className="aisle-stage">
         <AisleBackdrop aisleId={player.aisleId} />
         {stand ? (
-          <Stand stand={stand} focusSkuId={focusSkuId} question={standQuestion(stand.need)} />
+          <Stand
+            stand={stand}
+            focusSkuId={focusSkuId}
+            previewSkuId={previewSkuId}
+            question={standQuestion(stand.need)}
+          />
         ) : (
           <p className="aisle-prompt">
             Pide leche, arroz, jabón o tomate. El pasillo se abre; tú eliges una de las 4.

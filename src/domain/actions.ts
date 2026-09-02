@@ -1,14 +1,19 @@
 import {
   aisleById,
   availableNeeds,
+  canVisualize,
   formatMoney,
+  formatNeedList,
   formatUnitPrice,
+  isStoreBrand,
   pickStandSkus,
-  resolveNeed,
+  resolveNeeds,
   skuById,
+  skuWhy,
+  unitPrice,
 } from "./catalog";
 import { store } from "./store";
-import type { ActionResult, AisleId, NeedId } from "./types";
+import type { ActionResult, AisleId, NeedId, TicketLine, Trip } from "./types";
 
 function witness(tool: string, detail: string): void {
   store.setState((state) => ({
@@ -27,7 +32,29 @@ export function optionPayload(skuId: string) {
     kind: sku.kind,
     price: formatMoney(sku.price),
     unitPrice: formatUnitPrice(sku),
+    storeBrand: isStoreBrand(sku),
+    why: skuWhy(sku),
+    visualizable: canVisualize(sku),
     packHint: sku.packHint ?? null,
+  };
+}
+
+export function describeTrip() {
+  const { trip, stand } = store.getState();
+  if (!trip) {
+    return {
+      list: [] as NeedId[],
+      current: stand?.need ?? null,
+      remaining: [] as NeedId[],
+      done: [] as NeedId[],
+    };
+  }
+  const current = stand?.need ?? null;
+  return {
+    list: trip.needs,
+    current,
+    remaining: trip.needs.filter((need) => !trip.done.includes(need) && need !== current),
+    done: trip.done,
   };
 }
 
@@ -40,7 +67,9 @@ export function describeStand() {
     need: stand.need,
     question: standQuestion(stand.need),
     focusSkuId,
+    previewSkuId: store.getState().previewSkuId,
     options: stand.skuIds.map(optionPayload).filter((item) => item !== null),
+    trip: describeTrip(),
   };
 }
 
@@ -50,13 +79,53 @@ export function standQuestion(need: NeedId): string {
     arroz: "¿Qué arroz te encaja, o alguna de estas 4?",
     jabon: "¿Qué jabón necesitas, o alguna de estas 4?",
     tomate: "¿Qué tomate quieres, o alguno de estos 4?",
+    vestir: "¿Qué te pruebas, o alguna de estas 4?",
   };
   return labels[need];
 }
 
+function remainingHint(): string {
+  const { remaining } = describeTrip();
+  if (remaining.length === 0) {
+    return "Si has terminado, llama checkout.";
+  }
+  return `Quedan ${formatNeedList(remaining)}. Cuando quieras el siguiente, llama next_stand.`;
+}
+
+function openNeed(need: NeedId, trip: Trip, tool: string): ActionResult {
+  const options = pickStandSkus(need);
+  if (options.length === 0) {
+    return { ok: false, message: `No hay existencias para ${need}.` };
+  }
+
+  store.setState((state) => ({
+    ...state,
+    player: { aisleId: options[0].aisleId },
+    stand: { need, skuIds: options.map((sku) => sku.id) },
+    focusSkuId: null,
+    previewSkuId: null,
+    pendingNeed: null,
+    ticket: null,
+    trip,
+    lastWitness: {
+      tool,
+      at: Date.now(),
+      detail: `${need} · ${options.length} opciones`,
+    },
+  }));
+
+  const listPrefix =
+    trip.needs.length > 1 ? `Lista de ${trip.needs.length}: ${formatNeedList(trip.needs)}. ` : "";
+  return {
+    ok: true,
+    message: `${listPrefix}Estás en ${aisleById(options[0].aisleId).name}. ${standQuestion(need)}`,
+    data: describeStand(),
+  };
+}
+
 export function showStand(rawNeed: string): ActionResult {
-  const need = resolveNeed(rawNeed);
-  if (!need) {
+  const needs = resolveNeeds(rawNeed);
+  if (needs.length === 0) {
     store.setState((state) => ({
       ...state,
       pendingNeed: rawNeed,
@@ -68,29 +137,32 @@ export function showStand(rawNeed: string): ActionResult {
     };
   }
 
-  const options = pickStandSkus(need);
-  if (options.length === 0) {
-    return { ok: false, message: `No hay existencias para ${need}.` };
+  const { trip, stand } = store.getState();
+  const only = needs[0];
+  if (needs.length === 1 && trip && trip.needs.includes(only) && !trip.done.includes(only)) {
+    const current = stand?.need;
+    const done =
+      current && current !== only && !trip.done.includes(current) ? [...trip.done, current] : trip.done;
+    return openNeed(only, { needs: trip.needs, done }, "show_stand");
   }
 
-  store.setState((state) => ({
-    ...state,
-    player: { aisleId: options[0].aisleId },
-    stand: { need, skuIds: options.map((sku) => sku.id) },
-    focusSkuId: null,
-    pendingNeed: null,
-    lastWitness: {
-      tool: "show_stand",
-      at: Date.now(),
-      detail: `${need} · ${options.length} opciones`,
-    },
-  }));
+  return openNeed(only, { needs, done: [] }, "show_stand");
+}
 
-  return {
-    ok: true,
-    message: `Estás en ${aisleById(options[0].aisleId).name}. ${standQuestion(need)}`,
-    data: describeStand(),
-  };
+export function nextStand(): ActionResult {
+  const trip = describeTrip();
+  const next = trip.remaining[0];
+  if (!next) {
+    return {
+      ok: false,
+      message: "No queda nada en la lista. Si has terminado, llama checkout.",
+    };
+  }
+
+  const current = store.getState().stand?.need;
+  const done = [...trip.done];
+  if (current && !done.includes(current)) done.push(current);
+  return openNeed(next, { needs: trip.list, done }, "next_stand");
 }
 
 export function lookStand(): ActionResult {
@@ -101,8 +173,43 @@ export function lookStand(): ActionResult {
   witness("look_stand", described.need);
   return {
     ok: true,
-    message: `${described.aisleName}. ${described.question}`,
+    message: `${described.aisleName}. ${described.question} ${remainingHint()}`,
     data: described,
+  };
+}
+
+export function compareOptions(): ActionResult {
+  const described = describeStand();
+  if (!described) {
+    return { ok: false, message: "No hay stand abierto. Llama show_stand con un need." };
+  }
+
+  const skus = described.options
+    .map((option) => skuById(option.skuId))
+    .filter((sku): sku is NonNullable<typeof sku> => sku !== undefined);
+  const units = skus.map((sku) => unitPrice(sku));
+  const cheapestUnit = Math.min(...units);
+  const dearestUnit = Math.max(...units);
+
+  const options = skus.map((sku) => {
+    const unit = unitPrice(sku);
+    const tags: string[] = [];
+    tags.push(isStoreBrand(sku) ? "marca blanca" : "marca");
+    if (unit === cheapestUnit) tags.push("más barato");
+    if (unit === dearestUnit && dearestUnit !== cheapestUnit) tags.push("más caro");
+    return {
+      ...optionPayload(sku.id),
+      tags,
+    };
+  });
+
+  const cheapest = options.find((option) => option.tags.includes("más barato"));
+  witness("compare_options", described.need);
+
+  return {
+    ok: true,
+    message: `Comparo las ${options.length} del stand. No añado nada. ${cheapest?.name ?? "Una"} es la más barata (${cheapest?.unitPrice ?? ""}${cheapest?.storeBrand ? ", marca blanca" : ""}). Tú eliges.`,
+    data: { need: described.need, question: described.question, options },
   };
 }
 
@@ -113,6 +220,7 @@ export function goToAisle(aisleId: AisleId): ActionResult {
     player: { aisleId },
     stand: null,
     focusSkuId: null,
+    previewSkuId: null,
     pendingNeed: null,
     lastWitness: { tool: "go_to_aisle", at: Date.now(), detail: aisle.name },
   }));
@@ -127,6 +235,7 @@ export function closeStand(): ActionResult {
     ...state,
     stand: null,
     focusSkuId: null,
+    previewSkuId: null,
     lastWitness: { tool: "close_stand", at: Date.now(), detail: "cerrado" },
   }));
   return { ok: true, message: "Stand cerrado. Sigues en el pasillo." };
@@ -151,6 +260,47 @@ export function focusProduct(skuId: string): ActionResult {
   };
 }
 
+export function visualizeProduct(skuId: string): ActionResult {
+  const { stand } = store.getState();
+  if (!stand || !stand.skuIds.includes(skuId)) {
+    return { ok: false, message: "Ese producto no está en el stand abierto." };
+  }
+  const sku = skuById(skuId);
+  if (!sku) return { ok: false, message: "SKU desconocido." };
+  if (!canVisualize(sku)) {
+    return { ok: false, message: "Eso no se prueba. Solo la ropa de Moda se puede ver de cerca." };
+  }
+  store.setState((state) => ({
+    ...state,
+    focusSkuId: skuId,
+    previewSkuId: skuId,
+    lastWitness: { tool: "visualize_product", at: Date.now(), detail: skuId },
+  }));
+  return {
+    ok: true,
+    message: `Así se ve ${sku.name}. Si no te encaja, llama give_up_product. Si sí, add_to_cart.`,
+    data: optionPayload(skuId),
+  };
+}
+
+export function giveUpProduct(): ActionResult {
+  const { previewSkuId } = store.getState();
+  if (!previewSkuId) {
+    return { ok: false, message: "No hay nada puesto. Llama visualize_product primero." };
+  }
+  const sku = skuById(previewSkuId);
+  store.setState((state) => ({
+    ...state,
+    previewSkuId: null,
+    lastWitness: { tool: "give_up_product", at: Date.now(), detail: previewSkuId },
+  }));
+  return {
+    ok: true,
+    message: `Dejado: ${sku?.name ?? "la prenda"}. Sigue en el stand, no está en la cesta.`,
+    data: describeStand(),
+  };
+}
+
 export function addToCart(skuId: string): ActionResult {
   const { stand } = store.getState();
   if (!stand || !stand.skuIds.includes(skuId)) {
@@ -170,6 +320,7 @@ export function addToCart(skuId: string): ActionResult {
     return {
       ...state,
       focusSkuId: skuId,
+      previewSkuId: null,
       basket,
       lastWitness: { tool: "add_to_cart", at: Date.now(), detail: skuId },
     };
@@ -177,8 +328,8 @@ export function addToCart(skuId: string): ActionResult {
 
   return {
     ok: true,
-    message: `Añadido: ${sku.name}.`,
-    data: { skuId, basket: store.getState().basket },
+    message: `Añadido: ${sku.name}. ${remainingHint()}`,
+    data: { skuId, basket: store.getState().basket, trip: describeTrip() },
   };
 }
 
@@ -195,4 +346,43 @@ export function removeFromCart(skuId: string): ActionResult {
     lastWitness: { tool: "remove_from_cart", at: Date.now(), detail: skuId },
   }));
   return { ok: true, message: "Quitado de la cesta.", data: { basket: store.getState().basket } };
+}
+
+export function checkout(): ActionResult {
+  const { basket } = store.getState();
+  if (basket.length === 0) {
+    return { ok: false, message: "La cesta está vacía. Elige en el stand antes de irte." };
+  }
+
+  const lines: TicketLine[] = [];
+  let total = 0;
+  for (const line of basket) {
+    const sku = skuById(line.skuId);
+    if (!sku) continue;
+    const lineTotal = sku.price * line.qty;
+    total += lineTotal;
+    lines.push({ skuId: sku.id, name: sku.name, qty: line.qty, total: lineTotal });
+  }
+  if (lines.length === 0) {
+    return { ok: false, message: "La cesta está vacía. Elige en el stand antes de irte." };
+  }
+
+  const at = Date.now();
+  store.setState((state) => ({
+    ...state,
+    player: { aisleId: "entrada" },
+    stand: null,
+    focusSkuId: null,
+    previewSkuId: null,
+    basket: [],
+    trip: null,
+    ticket: { lines, total, at },
+    lastWitness: { tool: "checkout", at, detail: formatMoney(total) },
+  }));
+
+  return {
+    ok: true,
+    message: `Ticket: ${formatMoney(total)}. Gracias. Estás en la salida.`,
+    data: { ticket: store.getState().ticket },
+  };
 }

@@ -169,12 +169,34 @@ button {
   font-size: 0.85rem;
 }
 
-.stand-add {
+.stand-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.stand-add,
+.stand-see,
+.stand-drop {
   border: 0;
-  background: var(--ink);
-  color: var(--paper);
   border-radius: 999px;
   padding: 6px 10px;
+  flex: 1;
+}
+
+.stand-add {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.stand-see {
+  background: #fff;
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+
+.stand-drop {
+  background: var(--accent);
+  color: #fff8ef;
 }
 
 .basket {
@@ -230,6 +252,119 @@ button {
 .basket-total {
   font-size: 1rem;
   color: var(--ink);
+}
+
+.basket-done {
+  margin-top: 10px;
+  width: 100%;
+  border: 0;
+  background: var(--accent);
+  color: #fff8ef;
+  border-radius: 999px;
+  padding: 7px 10px;
+  font-weight: 650;
+}
+
+.trip {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: 168px;
+  z-index: 2;
+  background: rgb(255 248 239 / 92%);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  backdrop-filter: blur(10px);
+}
+
+.trip h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trip ol {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.trip li {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.trip li.is-here {
+  color: var(--ink);
+  font-weight: 650;
+}
+
+.trip li.is-done {
+  text-decoration: line-through;
+}
+
+.trip button {
+  margin-top: 10px;
+  width: 100%;
+  border: 0;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 999px;
+  padding: 6px 10px;
+}
+
+.ticket {
+  position: absolute;
+  left: 50%;
+  top: 18%;
+  transform: translateX(-50%);
+  width: min(360px, calc(100% - 48px));
+  z-index: 2;
+  background: rgb(255 248 239 / 94%);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 18px 18px 16px;
+  backdrop-filter: blur(10px);
+}
+
+.ticket h2 {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ticket-thanks {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.ticket ul {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ticket li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 0.88rem;
+}
+
+.ticket-total {
+  margin: 14px 0 0;
+  font-size: 1.15rem;
+  font-weight: 650;
 }
 
 @media (max-width: 800px) {
