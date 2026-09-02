@@ -1,5 +1,5 @@
+import { checkout, removeFromCart } from "../../domain/actions";
 import { formatMoney, skuById } from "../../domain/catalog";
-import { removeFromCart } from "../../domain/actions";
 import type { BasketLine } from "../../domain/types";
 
 type Props = {
@@ -38,6 +38,11 @@ export function Basket({ basket }: Props) {
         </ul>
       )}
       <p className="basket-total">{formatMoney(total)}</p>
+      {basket.length > 0 ? (
+        <button type="button" className="basket-done" onClick={() => checkout()}>
+          Ya está
+        </button>
+      ) : null}
     </aside>
   );
 }
