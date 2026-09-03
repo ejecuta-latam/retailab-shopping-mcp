@@ -1,0 +1,56 @@
+:root {
+  --ink: #10242c;
+  --fog: #10242c;
+  --mist: #4d6670;
+  --paper: #f3f8fa;
+  --panel: rgba(255, 255, 255, 0.82);
+  --accent: #0d8f5b;
+  --accent-soft: #d8f7e8;
+  --accent-ink: #ffffff;
+  --line: rgba(16, 36, 44, 0.1);
+  --font-display: "Syne", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+}
+
+html {
+  background: var(--paper);
+}
+
+body {
+  min-height: 100vh;
+  font-family: var(--font-body);
+  color: var(--ink);
+  background:
+    radial-gradient(ellipse 90% 55% at 85% -5%, rgba(13, 143, 91, 0.14), transparent 55%),
+    radial-gradient(ellipse 65% 45% at -5% 35%, rgba(70, 140, 170, 0.14), transparent 50%),
+    linear-gradient(165deg, #f7fbfd 0%, #eef5f8 48%, #e7f1f4 100%);
+  background-attachment: fixed;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
