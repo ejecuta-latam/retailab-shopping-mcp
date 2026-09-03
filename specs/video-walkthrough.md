@@ -35,6 +35,9 @@
   - Fake site chrome (nav, banner snippet, demo browser, storefronts via existing `StorePage`).
   - Optional `highlightSkuId` on `StorePage` for pulse/dim (walkthrough-only usage).
   - Replay and a “Hide chrome” / `?record=1` mode for capture.
+  - At least five 16:9 PNG stills extracted from important walkthrough beats and saved under `submission/walkthrough-frames/`.
+  - A timestamped, ready-to-read voiceover script aligned to the normal-motion autoplay sequence.
+  - An ElevenCreative Studio setup sheet and continuous Eleven v3 narration prompt with pauses aligned to the autoplay sequence.
 - **Out:** Changes to registered WebMCP tools, cart persistence on `/demo`, footer/nav links, video file in the repo.
 
 ## 5. Functional Requirements

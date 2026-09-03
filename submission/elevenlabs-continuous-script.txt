@@ -1,0 +1,21 @@
+Shopping M C P: same tools, every store, one cart.
+
+[short pause]
+
+Instead of scraping layouts, agents use tools published by each page, while shoppers stay in control.
+
+Here, the agent lists Nile Mart's products, searches for wireless earbuds, and adds Nile Buds to the shared cart.
+
+[long pause]
+
+Milk isn't sold here, so the same switch store tool opens Wide Mart. The cart keeps the Nile Mart item while the agent finds and adds milk.
+
+[pause]
+
+Next, it moves to Dart House and adds a candle. Get cart confirms three products from three stores, while open U I shows the same visible basket to the shopper.
+
+[long pause]
+
+Stores install the library once and connect it to their existing cart.
+
+No scraping or hidden checkout. This is Shopping M C P. Try it live at shopping dot ejecuta dot lat slash demo.
