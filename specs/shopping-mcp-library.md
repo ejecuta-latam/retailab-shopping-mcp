@@ -8,7 +8,7 @@
   1. A publishable TypeScript package `shopping-mcp` lives in this repo at `packages/shopping-mcp`.
   2. A store can register the profile with `registerShoppingMcp({ handlers })` — no React, no demo catalog.
   3. `/docs` is an install tutorial plus the tool contract (names match the package, not `show_stand`).
-  4. The homepage demo uses the package for the core tools. `list_stores` / `switch_store` stay demo-only extras.
+  4. The `/demo` page uses the package for the core tools. `list_stores` / `switch_store` stay demo-only extras.
   5. `npm install` at the repo root still runs the Astro site.
 
 ## 2. Non-Goals
@@ -67,6 +67,20 @@
 
 11. If `handlers.checkout` is provided, also register `checkout`. If omitted, do not register `checkout`.
 
+### 5.3b Cart island + `open_ui`
+
+11a. Unless `ui: false`, the library mounts a floating cart island (closed shadow root). No React. Markup is library-owned; agents never send HTML.
+11b. Always register `open_ui` when the island is enabled. Input `{}`. Shows the island and returns `{ ok: true, message, data: { itemCount, totalCents } }`. Already open: still `ok: true`.
+11c. Island default is **hidden**. Close via the island’s close control or Escape. No `close_ui` tool in this slice.
+11d. Island reads `getCart().data` (`items`, `totalCents`, `itemCount`). Each item needs `skuId`, `name`, `priceCents`, `quantity`. Optional `storeName` for a source pill.
+11e. Island actions: increment → `addToCart(skuId, 1)`; decrement → `setQuantity(skuId, n-1)` if that handler exists, else `removeFromCart` when `n === 1`; Remove → `removeFromCart`. Then refresh from `getCart`.
+11f. Successful `add_to_cart` / `remove_from_cart` from tools also refresh the island if it is open.
+11g. `ui.root` is a parent element or getter. Default `document.body` (fixed). Non-body roots: absolute, bottom-right; if the parent is `position: static`, set `relative`.
+11h. `ui.startOpen: true` opens the island after mount (demo uses this).
+11i. Island mounts even when `modelContext` is missing (humans still see it). Tools still no-op-register in that case.
+11j. Public helpers: `openCartUi()`, `refreshCartUi()`. Cart chip on a store can call `openCartUi()`.
+11k. Optional handler `setQuantity(skuId, quantity)` is UI-only (not a WebMCP tool). Quantity `< 1` should remove the line (store implements that).
+
 ### 5.4 Not in the library
 
 12. `list_stores`, `switch_store` are **not** core. Demo passes them as `extraTools`.
@@ -78,12 +92,14 @@
 15. Install snippet: `npm install shopping-mcp`.
 16. Tutorial uses a realistic handler sketch (the store’s own cart), not NileMart SKUs as required IDs.
 17. Link GitHub package path `packages/shopping-mcp`.
-18. Note: until npm publish, install from git: `npm install github:ctrlProgrammer/retailab-shopping-mcp#main` is **out** if the repo is not set up for subpath. Document: clone this repo and `"shopping-mcp": "file:./packages/shopping-mcp"` **or** `npm install shopping-mcp` after publish. For the hackathon, show both: `npm install shopping-mcp` as the intended command, and workspace/`file:` for developing against this repo.
+18. Note: until npm publish, install from git: `npm install github:ejecuta-latam/retailab-shopping-mcp#main` is **out** if the repo is not set up for subpath. Document: clone this repo and `"shopping-mcp": "file:./packages/shopping-mcp"` **or** `npm install shopping-mcp` after publish. For the hackathon, show both: `npm install shopping-mcp` as the intended command, and workspace/`file:` for developing against this repo.
 
 ### 5.6 Demo
 
 19. `src/lib/demo/webmcp.ts` calls `registerShoppingMcp` from `shopping-mcp` with demo handlers + extra store-switch tools.
 20. Demo handler behavior unchanged (same messages, same SKU rules).
+21. Showcase does **not** use the sidebar `SharedCart`. The library island is the cart UI, mounted on `.demo-browser`, `startOpen: true`. Store cart chips call `openCartUi()`.
+22. Demo `getCart` includes `storeName` on each line. Demo provides `setQuantity`.
 
 ## 6. Interfaces & Data
 
@@ -100,7 +116,20 @@ interface ShoppingMcpHandlers {
   addToCart: (skuId: string, quantity: number) => ToolResult | Promise<ToolResult>;
   getCart: () => ToolResult | Promise<ToolResult>;
   removeFromCart: (skuId: string) => ToolResult | Promise<ToolResult>;
+  setQuantity?: (skuId: string, quantity: number) => ToolResult | Promise<ToolResult>;
   checkout?: () => ToolResult | Promise<ToolResult>;
+}
+
+interface ShoppingMcpUiOptions {
+  root?: ParentNode | (() => ParentNode | null);
+  startOpen?: boolean;
+  title?: string;
+}
+
+interface RegisterShoppingMcpOptions {
+  handlers: ShoppingMcpHandlers;
+  extraTools?: ShoppingMcpTool[];
+  ui?: boolean | ShoppingMcpUiOptions;
 }
 
 interface ShoppingMcpTool {
@@ -110,10 +139,6 @@ interface ShoppingMcpTool {
   execute: (input: Record<string, unknown>) => unknown | Promise<unknown>;
 }
 
-interface RegisterShoppingMcpOptions {
-  handlers: ShoppingMcpHandlers;
-  extraTools?: ShoppingMcpTool[];
-}
 ```
 
 ### 6.1 Tool schemas (library)
@@ -129,6 +154,8 @@ interface RegisterShoppingMcpOptions {
 **`remove_from_cart`** `{ skuId: string }` required.
 
 **`checkout`** (optional) `{}`. Description: “Start checkout on this origin only. Must not pay silently; the store should require shopper confirmation.”
+
+**`open_ui`** `{}`. Description: “Show the shared shopping cart island on this page. The shopper sees items and the current total.” Not registered when `ui: false`.
 
 ### 6.2 Tutorial example (docs, exact shape)
 
@@ -160,26 +187,29 @@ Call once on the storefront page (browser). Not in a Node server.
 ## 8. Non-Functional
 
 - **Perf:** Registration is O(n tools), n ≤ 10.
-- **Security:** No `innerHTML`; handlers are the store’s code; library does not read the DOM.
-- **A11y:** N/A (no UI).
+- **Security:** No `innerHTML` from tool payloads or product names; island uses `textContent`. Handlers are the store’s code.
+- **A11y:** Island is a `dialog` with `aria-labelledby`. Close control named “Close shared cart”. Escape hides it.
 - **i18n:** English tool descriptions only.
 - **License:** MIT, same as repo.
 
 ## 9. Dependencies & Assumptions
 
 - Astro site already uses React; library must not import it.
-- GitHub: `ctrlProgrammer/retailab-shopping-mcp` (from Nav).
+- GitHub: `ejecuta-latam/retailab-shopping-mcp` (from Nav).
 - Assumed: npm workspaces with existing `package-lock.json`.
 - Assumed: intended public npm name is `shopping-mcp` (may be unpublished yet).
 
 ## 10. Acceptance Criteria
 
-- [ ] Given the repo root, when `npm install` then `npm run dev`, then `/` demo still shops and `/docs` shows Install + the example import from `"shopping-mcp"`.
+- [ ] Given the repo root, when `npm install` then `npm run dev`, then `/demo` still shops and `/docs` shows Install + the example import from `"shopping-mcp"`.
 - [ ] Given `/docs`, when read, then `show_stand` / `look_stand` do not appear; `list_products` and `search_products` do.
 - [ ] Given `packages/shopping-mcp`, when imported by the demo, then core tools still register when `modelContext` exists.
 - [ ] Given a handler that throws, when the tool runs, then the agent sees `{ ok: false }` not an uncaught exception.
 - [ ] Given no `modelContext`, when `registerShoppingMcp` runs, then it returns without throwing.
-- [ ] Given demo `switch_store`, when called on the landing demo, then store tabs still change (extra tool path).
+- [ ] Given demo `switch_store`, when called on `/demo`, then store tabs still change (extra tool path).
+- [ ] Given `/demo`, when it loads, then a “Shared cart” island is visible inside the fake browser (not a sidebar panel).
+- [ ] Given the island closed, when `open_ui` or the store Cart chip runs, then the island is visible with the current subtotal.
+- [ ] Given NileMart add-to-cart, when the visitor switches to WideMart, then the island still lists the NileMart line.
 
 ## 11. Test Strategy
 
@@ -193,4 +223,4 @@ Call once on the storefront page (browser). Not in a Node server.
 
 ## 13. Open Questions
 
-- None. Resolved: same repo (not a second project); library + landing + tutorial together; demo-only extras stay out of the package.
+- None. Resolved: same repo; island lives in the package; `open_ui` shows it; demo mounts it on the fake browser and drops the sidebar cart.

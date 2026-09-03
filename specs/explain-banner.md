@@ -2,9 +2,9 @@
 
 ## 1. Problem & Goals
 
-- **Problem:** After the live demo, the homepage ends. Visitors have felt the shared cart but do not get a short, memorable explanation of *why shopping-mcp exists*.
+- **Problem:** After the hero, the homepage needs a short, memorable explanation of *why shopping-mcp exists*.
 - **Goals:**
-  1. A new section sits immediately below the demo showcase on `/`.
+  1. A new section sits immediately below the compact demo teaser on `/`.
   2. Copy is short enough to scan in a few seconds and still states the product: same WebMCP tools on every store, page-scoped catalogs, one shared cart.
   3. Entrance uses Motion, triggered when the section scrolls into view (not on first paint, because the section is below the fold).
   4. `prefers-reduced-motion: reduce` disables motion offsets; content is still fully readable.
@@ -23,12 +23,12 @@
 
 ## 4. Scope
 
-- **In:** One React section under `DemoShowcase`; Motion `whileInView`; styles on the landing stylesheet; CTA to `/docs`.
+- **In:** One React section under the compact demo teaser; Motion `whileInView`; styles on the landing stylesheet; CTA to `/docs`.
 - **Out:** Footer, GitHub link wiring, extra stores, changelog.
 
 ## 5. Functional Requirements
 
-1. Placement: sibling of Banner and DemoShowcase, last in `<main>`.
+1. Placement: sibling of Banner and the compact demo teaser, last in `<main>`.
 2. Landmark: `<section>` with `id="why"` and `aria-labelledby` pointing at the heading.
 3. Content (exact):
    - Kicker: `The idea`

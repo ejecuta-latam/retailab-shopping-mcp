@@ -9,8 +9,8 @@ type NavLink = {
 const links: NavLink[] = [
   { href: "/", label: "Home" },
   { href: "/docs", label: "Docs" },
-  { href: "/#demo", label: "Demo" },
-  { href: "https://github.com/ctrlProgrammer/retailab-shopping-mcp", label: "GitHub" },
+  { href: "/demo", label: "Demo" },
+  { href: "https://github.com/ejecuta-latam/retailab-shopping-mcp", label: "GitHub" },
 ];
 
 export default function Nav() {

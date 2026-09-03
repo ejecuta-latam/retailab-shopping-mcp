@@ -1,0 +1,14 @@
+.git
+.github
+.astro
+.cursor
+.vscode
+node_modules
+dist
+specs
+AGENTS.md
+*.md
+.env
+.env.*
+.DS_Store
+**/.DS_Store

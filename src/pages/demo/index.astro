@@ -1,0 +1,14 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import DemoShowcase from "../../components/demo/DemoShowcase";
+import "../../styles/demo.css";
+---
+
+<BaseLayout
+  title="Demo — shopping-mcp"
+  description="Live multi-store shopping-mcp demo. WebMCP tools are registered on this page so agents can list products, switch stores, and share one cart."
+>
+  <main>
+    <DemoShowcase client:load fullPage />
+  </main>
+</BaseLayout>

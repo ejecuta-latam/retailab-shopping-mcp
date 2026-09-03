@@ -1,0 +1,21 @@
+{
+  "name": "shopping-mcp",
+  "short_name": "shopping-mcp",
+  "description": "WebMCP tool profile for retail by retailab.",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "theme_color": "#0d8f5b",
+  "background_color": "#f3f8fa",
+  "display": "browser"
+}

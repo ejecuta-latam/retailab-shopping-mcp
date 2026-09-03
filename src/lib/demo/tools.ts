@@ -3,6 +3,7 @@ import {
   cartItemCount,
   cartTotalCents,
   removeLine,
+  setLineQuantity,
 } from "./cart";
 import {
   getProduct,
@@ -117,7 +118,10 @@ export function getCart(state: ShoppingState): ToolResult {
     ok: true,
     message: `${cartItemCount(state.cart)} item(s) in the shared cart`,
     data: {
-      items: state.cart,
+      items: state.cart.map((line) => ({
+        ...line,
+        storeName: getStore(line.storeId).name,
+      })),
       totalCents: cartTotalCents(state.cart),
       itemCount: cartItemCount(state.cart),
     },
@@ -137,6 +141,24 @@ export function removeFromCart(
   return {
     ok: true,
     message: "Removed from cart",
+    data: { cart: next },
+  };
+}
+
+export function setQuantity(
+  state: ShoppingState,
+  mutators: ShoppingMutators,
+  skuId: string,
+  quantity: number,
+): ToolResult {
+  if (!state.cart.some((line) => line.skuId === skuId)) {
+    return { ok: false, message: "Item not in cart" };
+  }
+  const next = setLineQuantity(state.cart, skuId, quantity);
+  mutators.setCart(next);
+  return {
+    ok: true,
+    message: quantity < 1 ? "Removed from cart" : "Updated quantity",
     data: { cart: next },
   };
 }

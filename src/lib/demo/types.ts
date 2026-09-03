@@ -19,6 +19,7 @@ export interface Product {
   tags: string[];
   badge: string | null;
   category: string;
+  imageSrc: string;
 }
 
 export interface CartLine {

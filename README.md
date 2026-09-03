@@ -4,7 +4,21 @@ A **WebMCP tool profile for retail**: stores expose the same shopping tools so a
 
 Built for [The WebMCP Challenge](https://webmcp.devpost.com/).
 
-**License:** [MIT](./LICENSE) — open source; GitHub should show **MIT** in the repository About section once this file is on the default branch of a public repo.
+**License:** [MIT](./LICENSE) — GitHub About on [`ejecuta-latam/retailab-shopping-mcp`](https://github.com/ejecuta-latam/retailab-shopping-mcp).
+
+## Live demo (judges)
+
+**URL:** [https://shopping.realslab.xyz/demo](https://shopping.realslab.xyz/demo) (landing: [https://shopping.realslab.xyz/](https://shopping.realslab.xyz/))
+
+Open that page in **ChatGPT’s in-app browser** (WebMCP on by default) or Chrome 149+ with `chrome://flags/#enable-webmcp-testing`. No login.
+
+What to try:
+
+1. Call `list_products` or `search_products` on NileMart.
+2. `add_to_cart` for a NileMart SKU, then `switch_store` to `widemart`.
+3. `get_cart` / `open_ui` — the NileMart line is still there. Add WideMart milk. Humans can use Add to cart on the same basket.
+
+The library calls `document.modelContext.registerTool` (see `packages/shopping-mcp/src/register.ts`). Tool names include the challenge example `search_products`.
 
 ## Idea
 
@@ -49,8 +63,9 @@ The library registers these names via `document.modelContext.registerTool`:
 | `get_cart` | Read this store’s cart |
 | `remove_from_cart` | Remove a line from this store’s cart |
 | `checkout` | Optional. Checkout on this origin after the shopper confirms |
+| `open_ui` | Show the shared cart island on the page |
 
-The homepage demo also registers `list_stores` and `switch_store` (one page, three fictional shops). Real stores should not ship those.
+The `/demo` page also registers `list_stores` and `switch_store` (one page, three fictional shops). Real stores should not ship those.
 
 Test in ChatGPT’s in-app browser (WebMCP on by default) or Chrome with `chrome://flags/#enable-webmcp-testing`.
 
@@ -58,7 +73,8 @@ Test in ChatGPT’s in-app browser (WebMCP on by default) or Chrome with `chrome
 
 | Route | What |
 | --- | --- |
-| `/` | Landing + live multi-store demo (`#demo`) |
+| `/` | Landing + compact live teaser |
+| `/demo` | Full multi-store demo (WebMCP tools registered on this page) |
 | `/docs` | Install tutorial + tool contract |
 
 ## Stack
@@ -82,6 +98,10 @@ npm run preview
 ```
 
 Requires Node `>=22.12.0`.
+
+## Deploy
+
+GitHub Actions on `main` builds a Docker image and SSHs it onto the RealsLab VM (same pattern as `realslab-application`). Public host after nginx-proxy: `https://shopping.realslab.xyz`. One-time VM/DNS notes: `deploy/nginx-proxy.snippet.conf`.
 
 ## License
 

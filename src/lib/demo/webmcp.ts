@@ -1,5 +1,5 @@
 import type { RefObject } from "react";
-import { registerShoppingMcp as registerProfile } from "shopping-mcp";
+import { registerShoppingMcp as registerProfile, openCartUi } from "shopping-mcp";
 import type { ShoppingMcpTool } from "shopping-mcp";
 import {
   addToCart,
@@ -8,6 +8,7 @@ import {
   listStores,
   removeFromCart,
   searchProducts,
+  setQuantity as setCartLineQuantity,
   switchStore,
   type ShoppingMutators,
   type ShoppingState,
@@ -18,7 +19,10 @@ export interface LiveRef {
   mutators: ShoppingMutators;
 }
 
-export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void {
+export function registerShoppingMcp(
+  live: RefObject<LiveRef | null>,
+  options?: { startOpen?: boolean },
+): () => void {
   return registerProfile({
     handlers: {
       listProducts: () => listProducts(snap(live).state),
@@ -32,8 +36,17 @@ export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void
         const current = snap(live);
         return removeFromCart(current.state, current.mutators, skuId);
       },
+      setQuantity: (skuId, quantity) => {
+        const current = snap(live);
+        return setCartLineQuantity(current.state, current.mutators, skuId, quantity);
+      },
     },
     extraTools: demoStoreTools(live),
+    ui: {
+      root: () => document.querySelector(".demo-browser"),
+      startOpen: options?.startOpen ?? true,
+      title: "Shared cart",
+    },
   });
 }
 
@@ -77,3 +90,5 @@ function snap(live: RefObject<LiveRef | null>): LiveRef {
   }
   return live.current;
 }
+
+export { openCartUi };

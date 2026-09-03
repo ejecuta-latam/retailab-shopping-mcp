@@ -1,19 +1,31 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import {
-  loadCart,
-  saveCart,
-  setLineQuantity,
-  removeLine,
-} from "../../lib/demo/cart";
+import { loadCart, saveCart } from "../../lib/demo/cart";
 import { getStore, productsForStore, STORES } from "../../lib/demo/catalog";
 import { addToCart } from "../../lib/demo/tools";
 import type { LiveRef } from "../../lib/demo/webmcp";
-import { registerShoppingMcp } from "../../lib/demo/webmcp";
+import { openCartUi, registerShoppingMcp } from "../../lib/demo/webmcp";
+import { refreshCartUi } from "shopping-mcp";
 import type { CartLine, StoreId } from "../../lib/demo/types";
-import SharedCart from "./SharedCart";
 import StorePage from "./StorePage";
 
-export default function DemoShowcase() {
+const REGISTERED_TOOLS = [
+  "list_products",
+  "search_products",
+  "add_to_cart",
+  "get_cart",
+  "remove_from_cart",
+  "open_ui",
+  "list_stores",
+  "switch_store",
+] as const;
+
+const TEASER_PRODUCTS = 3;
+
+type DemoShowcaseProps = {
+  fullPage?: boolean;
+};
+
+export default function DemoShowcase({ fullPage = false }: DemoShowcaseProps) {
   const [storeId, setStoreId] = useState<StoreId>("nilemart");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
@@ -32,15 +44,17 @@ export default function DemoShowcase() {
   useEffect(() => {
     if (hydrated) {
       saveCart(cart);
+      void refreshCartUi();
     }
   }, [cart, hydrated]);
 
   useEffect(() => {
-    return registerShoppingMcp(liveRef);
-  }, []);
+    return registerShoppingMcp(liveRef, { startOpen: fullPage });
+  }, [fullPage]);
 
   const store = getStore(storeId);
-  const products = productsForStore(storeId);
+  const catalog = productsForStore(storeId);
+  const products = fullPage ? catalog : catalog.slice(0, TEASER_PRODUCTS);
 
   function handleAdd(skuId: string) {
     addToCart({ storeId, cart }, { setCart, setStoreId }, skuId, 1);
@@ -56,15 +70,40 @@ export default function DemoShowcase() {
     }
   }
 
+  const Heading = fullPage ? "h1" : "h2";
+
   return (
-    <section className="demo" id="demo" aria-labelledby="demo-heading">
+    <section
+      className={fullPage ? "demo demo--page" : "demo demo--teaser"}
+      id="demo"
+      aria-labelledby="demo-heading"
+    >
       <div className="demo__intro">
-        <p className="demo__kicker">Live showcase</p>
-        <h2 id="demo-heading">Same tools. Every store. One cart.</h2>
-        <p className="demo__support">
-          An agent reads the current storefront, can switch pages with{" "}
-          <code>switch_store</code>, then drops items into a shared cart.
-        </p>
+        <p className="demo__kicker">{fullPage ? "Agent showcase" : "Peek"}</p>
+        <Heading id="demo-heading">Same tools. Every store. One cart.</Heading>
+        {fullPage ? (
+          <p className="demo__support">
+            An agent reads the current storefront, can switch pages with{" "}
+            <code>switch_store</code>, and can open the shared cart island with{" "}
+            <code>open_ui</code>.
+          </p>
+        ) : (
+          <p className="demo__support">
+            Switch shops, add something, and the cart stays with you.{" "}
+            <a className="demo__more" href="/demo">
+              Open the full demo
+            </a>
+          </p>
+        )}
+        {fullPage ? (
+          <ul className="demo__tools" aria-label="Tools registered on this page">
+            {REGISTERED_TOOLS.map((name) => (
+              <li key={name}>
+                <code>{name}</code>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </div>
 
       <div className="demo__stage">
@@ -118,19 +157,12 @@ export default function DemoShowcase() {
               products={products}
               cart={cart}
               onAdd={handleAdd}
+              onOpenCart={() => {
+                void openCartUi();
+              }}
             />
           </div>
         </div>
-
-        <aside className="demo__side">
-          <SharedCart
-            cart={cart}
-            onQuantity={(skuId, quantity) =>
-              setCart((prev) => setLineQuantity(prev, skuId, quantity))
-            }
-            onRemove={(skuId) => setCart((prev) => removeLine(prev, skuId))}
-          />
-        </aside>
       </div>
     </section>
   );

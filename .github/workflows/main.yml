@@ -1,0 +1,72 @@
+name: CI/CD Pipeline for retailab shopping-mcp
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      actions: read
+      contents: read
+    env:
+      PROJECT_ID: sonic-totem-447414-t7
+      LOCATION: us-central1
+      IMAGE: us-central1-docker.pkg.dev/sonic-totem-447414-t7/reals-lab-repo/retailab-shopping-mcp
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev
+
+      - name: Build and push Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE }}:${{ github.sha }} -f ./Dockerfile .
+          docker tag ${{ env.IMAGE }}:${{ github.sha }} ${{ env.IMAGE }}:latest
+          docker push ${{ env.IMAGE }}:latest
+        working-directory: .
+
+  deploy-to-vm:
+    runs-on: ubuntu-latest
+    needs: build-and-deploy
+    env:
+      IMAGE: us-central1-docker.pkg.dev/sonic-totem-447414-t7/reals-lab-repo/retailab-shopping-mcp
+    steps:
+      - name: Deploy to VM via SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.GCP_VM_IP }}
+          username: ${{ secrets.GCP_VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: IMAGE
+          script: |
+            gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+            docker pull $IMAGE:latest
+
+            docker stop retailab-shopping-mcp || true
+            docker rm retailab-shopping-mcp || true
+
+            docker run -d \
+              --name retailab-shopping-mcp \
+              --network risks-vision-network \
+              --restart always \
+              -p 127.0.0.1:8092:80 \
+              $IMAGE:latest

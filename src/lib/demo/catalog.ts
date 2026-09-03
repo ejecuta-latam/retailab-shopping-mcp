@@ -24,7 +24,7 @@ export const STORES: Store[] = [
   },
 ];
 
-export const PRODUCTS: Product[] = [
+const CATALOG: Omit<Product, "imageSrc">[] = [
   {
     skuId: "nm-nilebuds",
     storeId: "nilemart",
@@ -242,6 +242,11 @@ export const PRODUCTS: Product[] = [
     category: "scent",
   },
 ];
+
+export const PRODUCTS: Product[] = CATALOG.map((product) => ({
+  ...product,
+  imageSrc: `/demo/products/${product.skuId}.webp`,
+}));
 
 const STORE_BY_ID = new Map(STORES.map((store) => [store.id, store]));
 

@@ -1,11 +1,13 @@
-# Spec: Homepage Demo Showcase — Shared Cart Across Stores
+# Spec: Demo Showcase — Shared Cart Across Stores
+
+> Route and page chrome: [[demo-page]]. This spec still owns storefronts, catalog, cart, and tools.
 
 ## 1. Problem & Goals
 
-- **Problem:** The landing page currently ends at the hero banner. Visitors cannot see how shopping-mcp lets an agent shop the same way on every store, or that a cart can survive moving from one storefront to another.
-- **Why now:** The banner already promises a demo (`#demo`) and the product story is “one tool profile, every store.” The homepage needs that story as a live exhibit.
+- **Problem:** Visitors cannot see how shopping-mcp lets an agent shop the same way on every store, or that a cart can survive moving from one storefront to another.
+- **Why now:** The banner already promises a demo and the product story is “one tool profile, every store.” `/demo` is that live exhibit.
 - **Goals (measurable):**
-  1. A demo section exists on the homepage, immediately below the main banner, with `id="demo"` so “View demo” scrolls to it.
+  1. A dedicated live demo exists at `/demo`. Nav and footer “Demo” go there. Homepage shows a compact teaser (`#demo`); banner “View demo” scrolls to it.
   2. At least three fictional storefronts are shown. Each is visually recognizable as a homage to a well-known retailer without using that retailer’s name, logo, or trademarks.
   3. A shopper can add items from store A, switch to store B, and still see those items in one shared cart, then add more from store B.
   4. Native WebMCP tools only “see” the current store’s catalog (page context) but read/write the same shared cart.
@@ -15,7 +17,7 @@
 
 - Real checkout, payments, accounts, or order tracking.
 - A live LLM backend or API keys.
-- Separate routed storefronts (`/nilemart`, etc.). The demo stays on `/`.
+- Separate routed storefronts (`/nilemart`, etc.). Store tabs stay on `/demo`.
 - Pixel-perfect clones or use of Amazon, Walmart, Target, eBay, Etsy names or logos.
 - A production WebMCP polyfill dependency. Native `modelContext` is registered when the browser exposes it; the storefront + shared cart is the guaranteed demo.
 - An in-page simulated agent panel, prompt chips, or tool-call log. Real agents use registered WebMCP tools.
@@ -23,7 +25,7 @@
 
 ## 3. Users & Stories
 
-- As a **visitor**, I want to scroll past the banner into a working multi-store demo so I understand shopping-mcp in under a minute.
+- As a **visitor**, I want to open `/demo` into a working multi-store demo so I understand shopping-mcp in under a minute.
 - As a **visitor**, I want to click between fictional storefronts so I can see that each page looks like a different shop.
 - As a **visitor**, I want to add an item on one store, switch stores, and still see it in the cart so I believe the cart is shared.
 - As a **real WebMCP agent** (ChatGPT in-app browser / Chrome with WebMCP), I want the same shopping-mcp tools registered on the page so I can list products, **switch storefronts**, and mutate the shared cart when the browser supports it.
@@ -31,21 +33,21 @@
 ## 4. Scope
 
 - **In:**
-  - Homepage section below the banner (`id="demo"`).
+  - `/demo` page (full-page `DemoShowcase`) and a compact teaser on `/`.
   - Three storefronts: NileMart (Amazon-like), WideMart (Walmart-like), DartHouse (Target-like).
   - Shared cart panel (add, increment, decrement/remove, subtotal).
   - Catalog data (static) and shopping-mcp tool functions.
   - Optional native WebMCP registration when `navigator.modelContext` or `document.modelContext` exists.
   - sessionStorage persistence for the cart during the tab session.
-- **Out:** Checkout, auth, real payments, i18n beyond `en`, additional stores, routed pages, LLM calls.
+- **Out:** Checkout, auth, real payments, i18n beyond `en`, additional stores, per-store routes, LLM calls.
 
 ## 5. Functional Requirements
 
 ### 5.1 Placement
 
-1. The demo is a sibling of the banner inside `<main>`, not inside the banner.
+1. The full storefront mounts on `/demo`. A compact teaser mounts on `/` between Banner and ExplainBanner (`id="demo"`).
 2. `#demo` has `scroll-margin-top` so the sticky nav does not cover the section title.
-3. Banner “View demo” continues to point at `#demo`.
+3. Banner “View demo” points at `#demo`. Nav “Demo” and Footer “Demo” point at `/demo`.
 
 ### 5.2 Store switching
 
@@ -60,6 +62,7 @@
 8. Each store has its own product list (6 SKUs each). SKUs are unique across stores.
 9. `list_products` / `search_products` only return products for the **current** store.
 10. `add_to_cart` fails if the SKU is not in the current store’s catalog. The caller must `switch_store` to that catalog first (same function as clicking a store tab).
+10a. Each product has a local photograph at `/demo/products/{skuId}.webp` (files in `public/demo/products/`). Product cards render that image, not a color-block with initials. Cart lines stay text-only (no thumbnails).
 
 ### 5.4 Shared cart
 
@@ -104,6 +107,7 @@ interface Product {
   tags: string[];
   badge: string | null;
   category: string;
+  imageSrc: string;     // /demo/products/{skuId}.webp
 }
 
 interface CartLine {
@@ -203,7 +207,7 @@ add_to_cart({ "skuId": "wm-milk" })
 
 ## 8. Non-Functional
 
-- **Perf:** Static catalog in JS; no images over the network; first demo paint is local CSS/HTML.
+- **Perf:** Static catalog in JS; product photos are bundled local files (no remote URLs); first demo paint is local CSS/HTML/images.
 - **Security:** No user-supplied HTML rendered unescaped; prompts are text. No secrets.
 - **Reliability:** Demo is fully client-side; works offline after load.
 - **A11y:** Section landmark, tablist, cart `aria-live="polite"` on add, focus-visible already global.
@@ -220,7 +224,7 @@ add_to_cart({ "skuId": "wm-milk" })
 
 ## 10. Acceptance Criteria
 
-- [ ] Given the homepage, when the visitor clicks “View demo”, then the page scrolls to a section below the banner titled as the demo.
+- [ ] Given the homepage, when the visitor clicks “View demo”, then they land on `/demo`.
 - [ ] Given the demo, when the visitor views NileMart, then they see navy search-first chrome and NileMart products — never the word Amazon.
 - [ ] Given the demo, when the visitor views WideMart, then they see blue/yellow value-store chrome and WideMart products — never the word Walmart.
 - [ ] Given the demo, when the visitor views DartHouse, then they see red/white clean chrome and DartHouse products — never the word Target.
@@ -231,13 +235,14 @@ add_to_cart({ "skuId": "wm-milk" })
 - [ ] Given the demo, when the visitor views the showcase, then there is no in-page agent panel, prompt field, or tool-call log.
 - [ ] Given a cart with items, when the tab is reloaded, then the cart is restored from sessionStorage.
 - [ ] Given a product card, when “Add to cart” is clicked twice, then quantity becomes 2 on one line.
+- [x] Given any store catalog, when a product card is shown, then it displays the local photo for that SKU (`/demo/products/{skuId}.webp`) rather than initials on a gradient.
 
 ## 11. Test Strategy
 
 - No unit-test runner in this repo yet; do not add one for this slice.
 - Typecheck: `npx tsc --noEmit` (Astro strict tsconfig).
-- Manual / Playwright against `http://localhost:4321/`:
-  1. Scroll/click to demo.
+- Manual / Playwright against `http://localhost:4321/demo`:
+  1. Open `/demo`.
   2. Add from NileMart, switch store, confirm cart.
   3. Quantity increment and remove.
   4. Desktop and ~375px viewport.
@@ -245,7 +250,7 @@ add_to_cart({ "skuId": "wm-milk" })
 ## 12. Rollout
 
 - Ships as part of the existing landing feature branch. No flags.
-- Backward compatible: additive homepage section.
+- Live exhibit lives at `/demo`; homepage links out.
 - Migration: none.
 
 ## 13. Open Questions

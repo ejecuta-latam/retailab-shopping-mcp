@@ -2,7 +2,7 @@
 
 WebMCP tool profile for retail. Your store registers the same shopping tools so agents can browse, add, and check out without scraping the DOM.
 
-This package is the **library stores integrate**. The landing demo and full tutorial live in the same repo: [retailab-shopping-mcp](https://github.com/ctrlProgrammer/retailab-shopping-mcp) → `/docs`.
+This package is the **library stores integrate**. The landing demo and full tutorial live in the same repo: [retailab-shopping-mcp](https://github.com/ejecuta-latam/retailab-shopping-mcp) → `/docs`.
 
 ## Install
 
@@ -53,6 +53,9 @@ Each handler returns `{ ok, message, data? }`. You map those to your cart and ca
 | `get_cart` | This store’s cart |
 | `remove_from_cart` | Remove a line |
 | `checkout` | This origin only, after the shopper confirms |
+| `open_ui` | Show the cart island on this page |
+
+`open_ui` ships with a floating island (shadow DOM). Pass `ui: false` to skip it. From your own Cart button, call `openCartUi()`.
 
 Agents keep a **trip list** across stores. Each store keeps its own real cart and checkout.
 

@@ -26,6 +26,10 @@ const tools = [
     name: "checkout",
     role: "Start checkout on this origin only, after the shopper confirms. Optional — omit the handler if you are not ready.",
   },
+  {
+    name: "open_ui",
+    role: "Show the shared shopping cart island on the page (items and current total). Skip with ui: false.",
+  },
 ];
 ---
 
@@ -57,7 +61,7 @@ const tools = [
   }
 }`}</code></pre>
     <p>
-      Clone <a href="https://github.com/ctrlProgrammer/retailab-shopping-mcp">retailab-shopping-mcp</a>
+      Clone <a href="https://github.com/ejecuta-latam/retailab-shopping-mcp">retailab-shopping-mcp</a>
       or copy <code>packages/shopping-mcp</code> into your project.
     </p>
 
@@ -87,6 +91,12 @@ registerShoppingMcp({
       <code>checkout</code> is optional. If you omit that handler, the tool is not
       registered. When you do implement it, require a shopper confirmation — never pay
       silently.
+    </p>
+    <p>
+      The library also mounts a floating <strong>shared cart island</strong> and registers
+      <code>open_ui</code> so an agent can show it. Pass <code>ui: false</code> if you
+      do not want that widget. You can call <code>openCartUi()</code> from your own Cart
+      button.
     </p>
 
     <h2>Required tools</h2>
@@ -120,15 +130,17 @@ registerShoppingMcp({
 
     <h2>This demo</h2>
     <p>
-      The homepage showcase is a consumer of the same package. It also registers two
-      extras that a real store should <strong>not</strong> ship:
-      <code>list_stores</code> and <code>switch_store</code>. Those only exist because
-      NileMart, WideMart, and DartHouse share one page.
+      The homepage has a compact teaser. The <a href="/demo">/demo</a> page is the full
+      showcase and the URL agents should open. Both consume the same package. The cart
+      island floats on the fake storefront. The demo also registers two extras that a
+      real store should <strong>not</strong> ship: <code>list_stores</code> and
+      <code>switch_store</code>. Those only exist because NileMart, WideMart, and
+      DartHouse share one page.
     </p>
 
     <h2>Try it</h2>
     <p>
-      Open the <a href="/#demo">live demo</a>, or load your store in ChatGPT’s in-app
+      Open the <a href="/demo">live demo</a>, or load your store in ChatGPT’s in-app
       browser (WebMCP on by default) or Chrome with
       <code>chrome://flags/#enable-webmcp-testing</code>.
     </p>

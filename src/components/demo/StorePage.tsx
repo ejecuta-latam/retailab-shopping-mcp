@@ -6,16 +6,23 @@ interface StorePageProps {
   products: Product[];
   cart: CartLine[];
   onAdd: (skuId: string) => void;
+  onOpenCart: () => void;
 }
 
-export default function StorePage({ store, products, cart, onAdd }: StorePageProps) {
+export default function StorePage({ store, products, cart, onAdd, onOpenCart }: StorePageProps) {
   const count = cartItemCount(cart);
 
   return (
     <div className="store" data-store={store.id}>
-      {store.id === "nilemart" ? <NileChrome store={store} count={count} /> : null}
-      {store.id === "widemart" ? <WideChrome store={store} count={count} /> : null}
-      {store.id === "darthouse" ? <DartChrome store={store} count={count} /> : null}
+      {store.id === "nilemart" ? (
+        <NileChrome store={store} count={count} onOpenCart={onOpenCart} />
+      ) : null}
+      {store.id === "widemart" ? (
+        <WideChrome store={store} count={count} onOpenCart={onOpenCart} />
+      ) : null}
+      {store.id === "darthouse" ? (
+        <DartChrome store={store} count={count} onOpenCart={onOpenCart} />
+      ) : null}
 
       <div className="store__body">
         <div className="store__intro">
@@ -25,12 +32,8 @@ export default function StorePage({ store, products, cart, onAdd }: StorePagePro
         <div className="product-grid">
           {products.map((product) => (
             <article key={product.skuId} className="product">
-              <div
-                className="product__tile"
-                style={{ background: tileGradient(product.skuId) }}
-                aria-hidden="true"
-              >
-                <span>{initials(product.name)}</span>
+              <div className="product__tile" aria-hidden="true">
+                <img src={product.imageSrc} alt="" />
               </div>
               {product.badge ? (
                 <span className="product__badge">{product.badge}</span>
@@ -64,7 +67,15 @@ export default function StorePage({ store, products, cart, onAdd }: StorePagePro
   );
 }
 
-function NileChrome({ store, count }: { store: Store; count: number }) {
+function NileChrome({
+  store,
+  count,
+  onOpenCart,
+}: {
+  store: Store;
+  count: number;
+  onOpenCart: () => void;
+}) {
   return (
     <>
       <header className="store-top">
@@ -83,9 +94,9 @@ function NileChrome({ store, count }: { store: Store; count: number }) {
             Returns
             <strong>& Orders</strong>
           </span>
-          <span className="store-cart-chip">
+          <button type="button" className="store-cart-chip" onClick={onOpenCart}>
             Cart <b>{count}</b>
-          </span>
+          </button>
         </div>
       </header>
       <nav className="store-subnav" aria-label="NileMart departments">
@@ -101,7 +112,15 @@ function NileChrome({ store, count }: { store: Store; count: number }) {
   );
 }
 
-function WideChrome({ store, count }: { store: Store; count: number }) {
+function WideChrome({
+  store,
+  count,
+  onOpenCart,
+}: {
+  store: Store;
+  count: number;
+  onOpenCart: () => void;
+}) {
   return (
     <>
       <header className="store-top">
@@ -121,9 +140,9 @@ function WideChrome({ store, count }: { store: Store; count: number }) {
             Sign in
             <strong>Account</strong>
           </span>
-          <span className="store-cart-chip">
+          <button type="button" className="store-cart-chip" onClick={onOpenCart}>
             Cart <b>{count}</b>
-          </span>
+          </button>
         </div>
       </header>
       <div className="store-fulfillment">
@@ -133,7 +152,15 @@ function WideChrome({ store, count }: { store: Store; count: number }) {
   );
 }
 
-function DartChrome({ store, count }: { store: Store; count: number }) {
+function DartChrome({
+  store,
+  count,
+  onOpenCart,
+}: {
+  store: Store;
+  count: number;
+  onOpenCart: () => void;
+}) {
   return (
     <>
       <header className="store-top">
@@ -154,9 +181,9 @@ function DartChrome({ store, count }: { store: Store; count: number }) {
             Bullseye Club
             <strong>Rewards</strong>
           </span>
-          <span className="store-cart-chip">
+          <button type="button" className="store-cart-chip" onClick={onOpenCart}>
             Cart <b>{count}</b>
-          </span>
+          </button>
         </div>
       </header>
     </>
@@ -213,22 +240,4 @@ function Stars({ value }: { value: number }) {
       </span>
     </span>
   );
-}
-
-function initials(name: string): string {
-  return name
-    .split(" ")
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join("")
-    .toUpperCase();
-}
-
-function tileGradient(skuId: string): string {
-  let hash = 0;
-  for (const char of skuId) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  }
-  const hue = hash % 360;
-  return `linear-gradient(145deg, hsl(${hue} 38% 42%), hsl(${(hue + 28) % 360} 32% 28%))`;
 }

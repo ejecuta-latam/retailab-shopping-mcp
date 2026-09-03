@@ -26,7 +26,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/ctrlProgrammer/retailab-shopping-mcp.git",
+    "url": "https://github.com/ejecuta-latam/retailab-shopping-mcp.git",
     "directory": "packages/shopping-mcp"
   }
 }

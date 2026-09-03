@@ -10,6 +10,7 @@ export interface ShoppingMcpHandlers {
   addToCart: (skuId: string, quantity: number) => ToolResult | Promise<ToolResult>;
   getCart: () => ToolResult | Promise<ToolResult>;
   removeFromCart: (skuId: string) => ToolResult | Promise<ToolResult>;
+  setQuantity?: (skuId: string, quantity: number) => ToolResult | Promise<ToolResult>;
   checkout?: () => ToolResult | Promise<ToolResult>;
 }
 
@@ -20,7 +21,14 @@ export interface ShoppingMcpTool {
   execute: (input: Record<string, unknown>) => unknown | Promise<unknown>;
 }
 
+export interface ShoppingMcpUiOptions {
+  root?: ParentNode | (() => ParentNode | null);
+  startOpen?: boolean;
+  title?: string;
+}
+
 export interface RegisterShoppingMcpOptions {
   handlers: ShoppingMcpHandlers;
   extraTools?: ShoppingMcpTool[];
+  ui?: boolean | ShoppingMcpUiOptions;
 }
