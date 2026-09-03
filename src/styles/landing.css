@@ -18,10 +18,42 @@
 }
 
 .nav__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
   font-family: var(--font-display);
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: -0.04em;
+}
+
+.nav__brand-text {
+  display: grid;
+  gap: 0.05rem;
+  line-height: 1.05;
+}
+
+.nav__company {
+  font-size: 0.95rem;
+}
+
+.nav__product {
+  font-size: 0.62rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--mist);
+}
+
+.logo-mark {
+  display: block;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+
+.logo-mark__core {
+  fill: var(--paper);
 }
 
 .nav__links {

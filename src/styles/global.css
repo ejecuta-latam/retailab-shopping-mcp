@@ -31,6 +31,8 @@ html {
 
 body {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-body);
   color: var(--ink);
   background:
@@ -38,6 +40,10 @@ body {
     radial-gradient(ellipse 65% 45% at -5% 35%, rgba(70, 140, 170, 0.14), transparent 50%),
     linear-gradient(165deg, #f7fbfd 0%, #eef5f8 48%, #e7f1f4 100%);
   background-attachment: fixed;
+}
+
+body > main {
+  flex: 1 0 auto;
 }
 
 a {
