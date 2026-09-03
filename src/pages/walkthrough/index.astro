@@ -1,0 +1,27 @@
+---
+import SiteHead from "../../components/SiteHead.astro";
+import Walkthrough from "../../components/walkthrough/Walkthrough";
+import "../../styles/global.css";
+import "../../styles/landing.css";
+import "../../styles/demo.css";
+import "../../styles/walkthrough.css";
+---
+
+<html lang="en" class="walk-html">
+  <head>
+    <SiteHead
+      title="Walkthrough — shopping-mcp"
+      description="Autoplay agent tour of shopping-mcp: home, demo stores, shared cart, and install docs. Built to record the Devpost video."
+    />
+    <meta name="robots" content="noindex" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="walk-body">
+    <Walkthrough client:load />
+  </body>
+</html>

@@ -7,9 +7,17 @@ interface StorePageProps {
   cart: CartLine[];
   onAdd: (skuId: string) => void;
   onOpenCart: () => void;
+  highlightSkuId?: string | null;
 }
 
-export default function StorePage({ store, products, cart, onAdd, onOpenCart }: StorePageProps) {
+export default function StorePage({
+  store,
+  products,
+  cart,
+  onAdd,
+  onOpenCart,
+  highlightSkuId = null,
+}: StorePageProps) {
   const count = cartItemCount(cart);
 
   return (
@@ -31,7 +39,20 @@ export default function StorePage({ store, products, cart, onAdd, onOpenCart }: 
         </div>
         <div className="product-grid">
           {products.map((product) => (
-            <article key={product.skuId} className="product">
+            <article
+              key={product.skuId}
+              className={[
+                "product",
+                highlightSkuId === product.skuId
+                  ? "product--hot"
+                  : highlightSkuId
+                    ? "product--dim"
+                    : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              data-sku={product.skuId}
+            >
               <div className="product__tile" aria-hidden="true">
                 <img src={product.imageSrc} alt="" />
               </div>
