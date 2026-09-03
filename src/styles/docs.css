@@ -32,6 +32,27 @@
   margin-top: 0.9rem;
 }
 
+.docs pre {
+  margin: 0.85rem 0 0;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 0.4rem;
+  background: #10242c;
+}
+
+.docs pre code {
+  color: #d7efe4;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+.docs a {
+  color: var(--ink);
+  font-weight: 600;
+}
+
 .docs ul {
   margin: 0.75rem 0 0;
   padding-left: 1.15rem;

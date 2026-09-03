@@ -1,4 +1,6 @@
 import type { RefObject } from "react";
+import { registerShoppingMcp as registerProfile } from "shopping-mcp";
+import type { ShoppingMcpTool } from "shopping-mcp";
 import {
   addToCart,
   getCart,
@@ -11,47 +13,38 @@ import {
   type ShoppingState,
 } from "./tools";
 
-type JsonSchema = Record<string, unknown>;
-
-interface ModelContext {
-  provideContext?: (input: { tools: RegisteredTool[] }) => void;
-  registerTool?: (tool: RegisteredTool) => void;
-}
-
-interface RegisteredTool {
-  name: string;
-  description: string;
-  inputSchema: JsonSchema;
-  execute: (input: Record<string, unknown>) => Promise<unknown>;
-}
-
 export interface LiveRef {
   state: ShoppingState;
   mutators: ShoppingMutators;
 }
 
-function getModelContext(): ModelContext | null {
-  const nav = navigator as Navigator & { modelContext?: ModelContext };
-  const doc = document as Document & { modelContext?: ModelContext };
-  return nav.modelContext ?? doc.modelContext ?? null;
+export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void {
+  return registerProfile({
+    handlers: {
+      listProducts: () => listProducts(snap(live).state),
+      searchProducts: (query) => searchProducts(snap(live).state, query),
+      addToCart: (skuId, quantity) => {
+        const current = snap(live);
+        return addToCart(current.state, current.mutators, skuId, quantity);
+      },
+      getCart: () => getCart(snap(live).state),
+      removeFromCart: (skuId) => {
+        const current = snap(live);
+        return removeFromCart(current.state, current.mutators, skuId);
+      },
+    },
+    extraTools: demoStoreTools(live),
+  });
 }
 
-export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void {
-  const ctx = getModelContext();
-  if (!ctx) {
-    return () => {};
-  }
-
-  const tools: RegisteredTool[] = [
+function demoStoreTools(live: RefObject<LiveRef | null>): ShoppingMcpTool[] {
+  return [
     {
       name: "list_stores",
       description:
         "List the demo storefronts (nilemart, widemart, darthouse) and which one is currently open. Call this before switch_store if you do not know the storeId.",
       inputSchema: { type: "object", properties: {} },
-      execute: async () => {
-        const snap = snapshot(live);
-        return listStores(snap.state);
-      },
+      execute: async () => listStores(snap(live).state),
     },
     {
       name: "switch_store",
@@ -71,97 +64,14 @@ export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void
       },
       execute: async (input) => {
         const storeId = typeof input.storeId === "string" ? input.storeId : "";
-        const snap = snapshot(live);
-        return switchStore(snap.state, snap.mutators, storeId);
-      },
-    },
-    {
-      name: "list_products",
-      description:
-        "List products on the current store page. Use this to read what this shop is selling right now.",
-      inputSchema: { type: "object", properties: {} },
-      execute: async () => {
-        const snap = snapshot(live);
-        return listProducts(snap.state);
-      },
-    },
-    {
-      name: "search_products",
-      description:
-        "Search the current store page catalog by keyword. Does not search other stores.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Search text, e.g. headphones or milk" },
-        },
-        required: ["query"],
-      },
-      execute: async (input) => {
-        const query = typeof input.query === "string" ? input.query : "";
-        const snap = snapshot(live);
-        return searchProducts(snap.state, query);
-      },
-    },
-    {
-      name: "add_to_cart",
-      description:
-        "Add a SKU from the current store page to the shared cart. Fails if the SKU is not on this page — call switch_store first, then retry.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          skuId: { type: "string" },
-          quantity: { type: "integer", minimum: 1 },
-        },
-        required: ["skuId"],
-      },
-      execute: async (input) => {
-        const skuId = typeof input.skuId === "string" ? input.skuId : "";
-        const quantity = typeof input.quantity === "number" ? input.quantity : 1;
-        const snap = snapshot(live);
-        return addToCart(snap.state, snap.mutators, skuId, quantity);
-      },
-    },
-    {
-      name: "get_cart",
-      description: "Read the shared cart. Items may come from any store in this demo.",
-      inputSchema: { type: "object", properties: {} },
-      execute: async () => {
-        const snap = snapshot(live);
-        return getCart(snap.state);
-      },
-    },
-    {
-      name: "remove_from_cart",
-      description: "Remove one SKU line from the shared cart.",
-      inputSchema: {
-        type: "object",
-        properties: { skuId: { type: "string" } },
-        required: ["skuId"],
-      },
-      execute: async (input) => {
-        const skuId = typeof input.skuId === "string" ? input.skuId : "";
-        const snap = snapshot(live);
-        return removeFromCart(snap.state, snap.mutators, skuId);
+        const current = snap(live);
+        return switchStore(current.state, current.mutators, storeId);
       },
     },
   ];
-
-  if (typeof ctx.provideContext === "function") {
-    ctx.provideContext({ tools });
-  } else if (typeof ctx.registerTool === "function") {
-    for (const tool of tools) {
-      ctx.registerTool(tool);
-    }
-  }
-
-  return () => {
-    if (typeof ctx.provideContext === "function") {
-      ctx.provideContext({ tools: [] });
-    }
-  };
 }
 
-function snapshot(live: RefObject<LiveRef | null>): LiveRef {
+function snap(live: RefObject<LiveRef | null>): LiveRef {
   if (!live.current) {
     throw new Error("Demo tools are not ready");
   }

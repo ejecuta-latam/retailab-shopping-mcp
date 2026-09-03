@@ -3,59 +3,97 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 
 const tools = [
   {
-    name: "show_stand",
-    role: "Open up to 4 options for a need. Agent asks the shopper which one — never silent-adds.",
+    name: "list_products",
+    role: "List what this store is selling on the current page.",
   },
   {
-    name: "look_stand",
-    role: "Re-read the open stand (aisle, options, trip). Use when context is lost.",
-  },
-  {
-    name: "export_cart",
-    role: "Return this store’s cart snapshot for the agent’s shared trip list.",
+    name: "search_products",
+    role: "Search this page’s catalog by keyword. Does not search other stores.",
   },
   {
     name: "add_to_cart",
-    role: "Add one stand option after the shopper chooses. Fails if the SKU is not on the open stand. Prefer user confirmation.",
+    role: "Add a SKU from this page to this store’s cart. Fails if the SKU is not on this page.",
+  },
+  {
+    name: "get_cart",
+    role: "Read this store’s cart.",
   },
   {
     name: "remove_from_cart",
-    role: "Remove a line from this store’s cart.",
+    role: "Remove one line from this store’s cart.",
   },
   {
     name: "checkout",
-    role: "Complete purchase on this origin only, after the shopper confirms. Always gate with user interaction.",
+    role: "Start checkout on this origin only, after the shopper confirms. Optional — omit the handler if you are not ready.",
   },
 ];
 ---
 
 <BaseLayout
   title="Docs — shopping-mcp"
-  description="shopping-mcp standard: shared trip tools for WebMCP shopping across stores."
+  description="Install shopping-mcp and register the same WebMCP shopping tools on every store."
 >
   <main class="docs">
-    <h1>Docs</h1>
+    <h1>Install shopping-mcp</h1>
     <p>
       <code>shopping-mcp</code> is a small WebMCP tool profile for retail. Every store
       exposes the same shopping tools so agents know how to browse, choose, and check out
       without scraping the DOM.
     </p>
     <p>
-      The <strong style="color: var(--ink); font-weight: 600;">shared cart</strong> is not
-      one mega-cart inside the page. The agent (or a browser extension) keeps a shared
-      <em>trip</em> — needs, picks, and store URLs. Each store keeps its own real cart and
-      checkout. That respects origin isolation and keeps purchases visible to the shopper.
+      This site is the landing and the live demo. The installable library lives in the
+      same repo at <code>packages/shopping-mcp</code>.
     </p>
 
-    <h2>How it fits together</h2>
-    <ul>
-      <li>Visit store A → call its tools → snapshot lines into the trip.</li>
-      <li>Visit store B → same tool names, that store’s cart.</li>
-      <li>Confirm checkout per merchant. Never pay across origins in one silent step.</li>
-    </ul>
+    <h2>Install</h2>
+    <p>In your storefront app:</p>
+    <pre><code>npm install shopping-mcp</code></pre>
+    <p>
+      The package is not on the public npm registry yet. Until it is, point at this repo:
+    </p>
+    <pre><code>{`{
+  "dependencies": {
+    "shopping-mcp": "file:./packages/shopping-mcp"
+  }
+}`}</code></pre>
+    <p>
+      Clone <a href="https://github.com/ctrlProgrammer/retailab-shopping-mcp">retailab-shopping-mcp</a>
+      or copy <code>packages/shopping-mcp</code> into your project.
+    </p>
+
+    <h2>Register</h2>
+    <p>
+      Call once in the <strong>browser</strong> on the storefront page — not on your Node
+      server. Map each handler to your own catalog and cart.
+    </p>
+    <pre><code>{`import { registerShoppingMcp } from "shopping-mcp";
+
+registerShoppingMcp({
+  handlers: {
+    listProducts: () => myApi.list(),
+    searchProducts: (query) => myApi.search(query),
+    addToCart: (skuId, quantity) => myApi.add(skuId, quantity),
+    getCart: () => myApi.cart(),
+    removeFromCart: (skuId) => myApi.remove(skuId),
+    checkout: () => myApi.checkout(),
+  },
+});`}</code></pre>
+    <p>
+      Each handler returns <code>{`{ ok, message, data? }`}</code>. The library registers
+      names, JSON schemas, and argument checks. It does not scrape your page and it does
+      not own the cart.
+    </p>
+    <p>
+      <code>checkout</code> is optional. If you omit that handler, the tool is not
+      registered. When you do implement it, require a shopper confirmation — never pay
+      silently.
+    </p>
 
     <h2>Required tools</h2>
-    <p>Implement these on each participating store via <code>document.modelContext</code>.</p>
+    <p>
+      Agents look for these names on every participating store via
+      <code>document.modelContext</code>.
+    </p>
     <ul class="docs__tools">
       {
         tools.map((tool) => (
@@ -67,11 +105,36 @@ const tools = [
       }
     </ul>
 
+    <h2>Cart vs trip</h2>
+    <p>
+      Each store keeps its <strong>own</strong> cart and checkout. The agent (or a
+      browser client) keeps a shared <em>trip</em> — needs, picks, and store URLs — by
+      calling <code>get_cart</code> on each origin. That respects origin isolation and
+      keeps purchases visible to the shopper.
+    </p>
+    <ul>
+      <li>Visit store A → call its tools → snapshot lines into the trip.</li>
+      <li>Visit store B → same tool names, that store’s cart.</li>
+      <li>Confirm checkout per merchant. Never pay across origins in one silent step.</li>
+    </ul>
+
+    <h2>This demo</h2>
+    <p>
+      The homepage showcase is a consumer of the same package. It also registers two
+      extras that a real store should <strong>not</strong> ship:
+      <code>list_stores</code> and <code>switch_store</code>. Those only exist because
+      NileMart, WideMart, and DartHouse share one page.
+    </p>
+
+    <h2>Try it</h2>
+    <p>
+      Open the <a href="/#demo">live demo</a>, or load your store in ChatGPT’s in-app
+      browser (WebMCP on by default) or Chrome with
+      <code>chrome://flags/#enable-webmcp-testing</code>.
+    </p>
     <p class="docs__note">
-      Live registration lives in <code>src/lib/demo/webmcp.ts</code> using
-      <code>document.modelContext.registerTool</code> (including
-      <code>search_products</code>). Open the homepage demo or ChatGPT’s in-app browser
-      with WebMCP enabled.
+      Package source: <code>packages/shopping-mcp</code>. The landing demo wires it in
+      <code>src/lib/demo/webmcp.ts</code>.
     </p>
   </main>
 </BaseLayout>

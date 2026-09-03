@@ -1,11 +1,15 @@
 {
-  "name": "shopping-mcp",
+  "name": "shopping-mcp-web",
+  "private": true,
   "type": "module",
   "version": "0.0.1",
   "license": "MIT",
   "engines": {
     "node": ">=22.12.0"
   },
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
@@ -19,7 +23,8 @@
     "astro": "^7.2.10",
     "motion": "^13.2.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "shopping-mcp": "*"
   },
   "allowScripts": {
     "esbuild": true

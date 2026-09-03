@@ -12,30 +12,45 @@ Agents should shop *with* the user — open options, ask which one, then add —
 
 The **shared cart** in this demo is held by the page: needs and picks across fictional storefronts. Each “store” page only exposes its own catalog to tools; the cart persists when you switch stores.
 
-## WebMCP tools
+## Library
 
-Tools register with the imperative API judges expect:
+Stores integrate the profile with [`packages/shopping-mcp`](./packages/shopping-mcp):
+
+```bash
+npm install shopping-mcp
+```
 
 ```ts
-await document.modelContext.registerTool({
-  name: "search_products",
-  description: "Search the product catalog",
-  inputSchema: { /* ... */ },
-  execute: async (input) => { /* ... */ },
+import { registerShoppingMcp } from "shopping-mcp";
+
+registerShoppingMcp({
+  handlers: {
+    listProducts: () => myApi.list(),
+    searchProducts: (query) => myApi.search(query),
+    addToCart: (skuId, quantity) => myApi.add(skuId, quantity),
+    getCart: () => myApi.cart(),
+    removeFromCart: (skuId) => myApi.remove(skuId),
+    checkout: () => myApi.checkout(),
+  },
 });
 ```
 
-Implementation: [`src/lib/demo/webmcp.ts`](./src/lib/demo/webmcp.ts)
+Install tutorial: [`/docs`](./src/pages/docs/index.astro) on the site.
+
+## WebMCP tools
+
+The library registers these names via `document.modelContext.registerTool`:
 
 | Tool | Role |
 | --- | --- |
-| `list_stores` | List storefronts and which page is open |
-| `switch_store` | Open NileMart, WideMart, or DartHouse (cart stays) |
-| `search_products` | Search the current store page catalog |
-| `list_products` | List products on the current store page |
-| `add_to_cart` | Add a SKU from this page to the shared cart |
-| `get_cart` | Read the shared cart |
-| `remove_from_cart` | Remove a line from the shared cart |
+| `search_products` | Search this store’s current page catalog |
+| `list_products` | List products on this page |
+| `add_to_cart` | Add a SKU from this page to this store’s cart |
+| `get_cart` | Read this store’s cart |
+| `remove_from_cart` | Remove a line from this store’s cart |
+| `checkout` | Optional. Checkout on this origin after the shopper confirms |
+
+The homepage demo also registers `list_stores` and `switch_store` (one page, three fictional shops). Real stores should not ship those.
 
 Test in ChatGPT’s in-app browser (WebMCP on by default) or Chrome with `chrome://flags/#enable-webmcp-testing`.
 
@@ -44,7 +59,7 @@ Test in ChatGPT’s in-app browser (WebMCP on by default) or Chrome with `chrome
 | Route | What |
 | --- | --- |
 | `/` | Landing + live multi-store demo (`#demo`) |
-| `/docs` | Short standard docs |
+| `/docs` | Install tutorial + tool contract |
 
 ## Stack
 

@@ -5,10 +5,15 @@
     "**/*"
   ],
   "exclude": [
-    "dist"
+    "dist",
+    "packages/shopping-mcp/node_modules"
   ],
   "compilerOptions": {
+    "baseUrl": ".",
     "jsx": "react-jsx",
-    "jsxImportSource": "react"
+    "jsxImportSource": "react",
+    "paths": {
+      "shopping-mcp": ["./packages/shopping-mcp/src/index.ts"]
+    }
   }
 }
