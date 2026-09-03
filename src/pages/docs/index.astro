@@ -1,0 +1,77 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const tools = [
+  {
+    name: "show_stand",
+    role: "Open up to 4 options for a need. Agent asks the shopper which one — never silent-adds.",
+  },
+  {
+    name: "look_stand",
+    role: "Re-read the open stand (aisle, options, trip). Use when context is lost.",
+  },
+  {
+    name: "export_cart",
+    role: "Return this store’s cart snapshot for the agent’s shared trip list.",
+  },
+  {
+    name: "add_to_cart",
+    role: "Add one stand option after the shopper chooses. Fails if the SKU is not on the open stand. Prefer user confirmation.",
+  },
+  {
+    name: "remove_from_cart",
+    role: "Remove a line from this store’s cart.",
+  },
+  {
+    name: "checkout",
+    role: "Complete purchase on this origin only, after the shopper confirms. Always gate with user interaction.",
+  },
+];
+---
+
+<BaseLayout
+  title="Docs — shopping-mcp"
+  description="shopping-mcp standard: shared trip tools for WebMCP shopping across stores."
+>
+  <main class="docs">
+    <h1>Docs</h1>
+    <p>
+      <code>shopping-mcp</code> is a small WebMCP tool profile for retail. Every store
+      exposes the same shopping tools so agents know how to browse, choose, and check out
+      without scraping the DOM.
+    </p>
+    <p>
+      The <strong style="color: var(--ink); font-weight: 600;">shared cart</strong> is not
+      one mega-cart inside the page. The agent (or a browser extension) keeps a shared
+      <em>trip</em> — needs, picks, and store URLs. Each store keeps its own real cart and
+      checkout. That respects origin isolation and keeps purchases visible to the shopper.
+    </p>
+
+    <h2>How it fits together</h2>
+    <ul>
+      <li>Visit store A → call its tools → snapshot lines into the trip.</li>
+      <li>Visit store B → same tool names, that store’s cart.</li>
+      <li>Confirm checkout per merchant. Never pay across origins in one silent step.</li>
+    </ul>
+
+    <h2>Required tools</h2>
+    <p>Implement these on each participating store via <code>document.modelContext</code>.</p>
+    <ul class="docs__tools">
+      {
+        tools.map((tool) => (
+          <li>
+            <strong>{tool.name}</strong>
+            <span>{tool.role}</span>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="docs__note">
+      Live registration lives in <code>src/lib/demo/webmcp.ts</code> using
+      <code>document.modelContext.registerTool</code> (including
+      <code>search_products</code>). Open the homepage demo or ChatGPT’s in-app browser
+      with WebMCP enabled.
+    </p>
+  </main>
+</BaseLayout>
