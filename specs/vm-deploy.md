@@ -36,13 +36,13 @@
 4. Deploy job (needs build): `appleboy/ssh-action@v1.2.0` with `GCP_VM_IP`, `GCP_VM_USER`, `SSH_PRIVATE_KEY`; `envs: IMAGE`.
 5. SSH script: `gcloud auth configure-docker … --quiet`; `docker pull $IMAGE:latest`; stop/rm `retailab-shopping-mcp`; `docker run -d --name retailab-shopping-mcp --network risks-vision-network --restart always -p 127.0.0.1:8092:80 $IMAGE:latest`.
 6. Container nginx listens on 80; `try_files` for Astro multi-page (`/demo`, `/docs`).
-7. Intended public host: `shopping.realslab.xyz` (DNS + nginx-proxy + cert SAN are a one-time VM step; snippet in `deploy/nginx-proxy.snippet.conf`).
+7. Intended public host: `shopping.ejecuta.lat` (DNS + nginx-proxy + cert SAN are a one-time VM step; snippet in `deploy/nginx-proxy.snippet.conf`).
 8. Loopback 8092 is free: 8087/8088/8089/8091 are taken.
 
 ## 6. Interfaces
 
 - Secrets (same names as RealsLab frontend): `GCP_SA_KEY`, `GCP_VM_IP`, `GCP_VM_USER`, `SSH_PRIVATE_KEY`.
-- Public URL after nginx: `https://shopping.realslab.xyz/` and `/demo`.
+- Public URL after nginx: `https://shopping.ejecuta.lat/` and `/demo`.
 
 ## 7. Edge Cases
 
@@ -64,7 +64,7 @@
 
 - [ ] Given a push to `main` with secrets set, when the workflow finishes, then `docker ps` on the VM shows `retailab-shopping-mcp` Up.
 - [ ] Given `curl -sI http://127.0.0.1:8092/demo`, when the container is running, then the response is 200.
-- [ ] Given nginx-proxy + DNS, when a browser opens `https://shopping.realslab.xyz/demo`, then NileMart loads.
+- [ ] Given nginx-proxy + DNS, when a browser opens `https://shopping.ejecuta.lat/demo`, then NileMart loads.
 - [ ] Given Nav GitHub, when clicked, then the URL is `https://github.com/ejecuta-latam/retailab-shopping-mcp`.
 
 ## 11. Test Strategy
@@ -74,9 +74,9 @@
 
 ## 12. Rollout
 
-- One-time: copy Actions secrets; add DNS A for `shopping.realslab.xyz`; paste nginx snippet; expand TLS SAN; reload nginx-proxy.
+- One-time: DNS A for `shopping.ejecuta.lat`; issue a Let’s Encrypt cert for that host; paste nginx snippet; reload nginx-proxy.
 - Recurring: push `main`.
 
 ## 13. Open Questions
 
-- None. Resolved: same pipeline as RealsLab frontend; static nginx instead of Node because this Astro app has no server adapter. Host `shopping.realslab.xyz`. Port `8092`.
+- None. Resolved: same pipeline as RealsLab frontend; static nginx instead of Node because this Astro app has no server adapter. Host `shopping.ejecuta.lat`. Port `8092`.

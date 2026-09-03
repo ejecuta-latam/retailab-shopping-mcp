@@ -8,7 +8,7 @@ Built for [The WebMCP Challenge](https://webmcp.devpost.com/).
 
 ## Live demo (judges)
 
-**URL:** [https://shopping.realslab.xyz/demo](https://shopping.realslab.xyz/demo) (landing: [https://shopping.realslab.xyz/](https://shopping.realslab.xyz/))
+**URL:** [https://shopping.ejecuta.lat/demo](https://shopping.ejecuta.lat/demo) (landing: [https://shopping.ejecuta.lat/](https://shopping.ejecuta.lat/))
 
 Open that page in **ChatGPT’s in-app browser** (WebMCP on by default) or Chrome 149+ with `chrome://flags/#enable-webmcp-testing`. No login.
 
@@ -101,7 +101,7 @@ Requires Node `>=22.12.0`.
 
 ## Deploy
 
-GitHub Actions on `main` builds a Docker image and SSHs it onto the RealsLab VM (same pattern as `realslab-application`). Public host after nginx-proxy: `https://shopping.realslab.xyz`. One-time VM/DNS notes: `deploy/nginx-proxy.snippet.conf`.
+GitHub Actions on `main` builds a Docker image and SSHs it onto the RealsLab VM (same pattern as `realslab-application`). Public host after nginx-proxy: `https://shopping.ejecuta.lat`. One-time VM/DNS notes: `deploy/nginx-proxy.snippet.conf`.
 
 ## License
 

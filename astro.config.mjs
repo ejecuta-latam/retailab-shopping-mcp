@@ -8,7 +8,7 @@ const root = dirname(fileURLToPath(import.meta.url));
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://shopping.realslab.xyz",
+  site: "https://shopping.ejecuta.lat",
   integrations: [react()],
   vite: {
     resolve: {

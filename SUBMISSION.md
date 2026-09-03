@@ -4,8 +4,8 @@ Copy these into [The WebMCP Challenge](https://webmcp.devpost.com/) form. Keep t
 
 ## Links
 
-- **Live URL (agent page):** https://shopping.realslab.xyz/demo
-- **Landing:** https://shopping.realslab.xyz/
+- **Live URL (agent page):** https://shopping.ejecuta.lat/demo
+- **Landing:** https://shopping.ejecuta.lat/
 - **Repo:** https://github.com/ejecuta-latam/retailab-shopping-mcp
 - **License:** MIT (`LICENSE` at repo root)
 - **Demo video:** _paste the public YouTube URL here — under 3 minutes, with audio_
@@ -30,7 +30,7 @@ Shop a trip across stores without scraping or a silent mega-checkout. The human 
 
 ## Testing instructions (private field is fine)
 
-1. Open https://shopping.realslab.xyz/demo in ChatGPT’s in-app browser or Chrome with WebMCP testing enabled.
+1. Open https://shopping.ejecuta.lat/demo in ChatGPT’s in-app browser or Chrome with WebMCP testing enabled.
 2. Confirm tools: `search_products`, `list_products`, `add_to_cart`, `get_cart`, `remove_from_cart`, `open_ui`, `list_stores`, `switch_store`.
 3. `list_products` on NileMart → `add_to_cart` a SKU → `switch_store` `{ "storeId": "widemart" }` → `get_cart` still has the NileMart line.
 4. Click Add to cart as a human; the island matches the tools.
