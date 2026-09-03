@@ -73,13 +73,7 @@ function NileChrome({ store, count }: { store: Store; count: number }) {
             nile<span>mart</span>
           </span>
         </div>
-        <label className="store-search">
-          <span className="visually-hidden">{store.searchPlaceholder}</span>
-          <input readOnly tabIndex={-1} placeholder={store.searchPlaceholder} />
-          <span className="store-search__go" aria-hidden="true">
-            Go
-          </span>
-        </label>
+        <SearchBar placeholder={store.searchPlaceholder} showGo />
         <div className="store-top__meta">
           <span>
             Hello, sign in
@@ -117,10 +111,7 @@ function WideChrome({ store, count }: { store: Store; count: number }) {
           </span>
           <span className="logo-wide-word">WideMart</span>
         </div>
-        <label className="store-search">
-          <span className="visually-hidden">{store.searchPlaceholder}</span>
-          <input readOnly tabIndex={-1} placeholder={store.searchPlaceholder} />
-        </label>
+        <SearchBar placeholder={store.searchPlaceholder} />
         <div className="store-top__meta">
           <span>
             Reorder
@@ -157,10 +148,7 @@ function DartChrome({ store, count }: { store: Store; count: number }) {
           <span>Deals</span>
           <span>New</span>
         </nav>
-        <label className="store-search">
-          <span className="visually-hidden">{store.searchPlaceholder}</span>
-          <input readOnly tabIndex={-1} placeholder={store.searchPlaceholder} />
-        </label>
+        <SearchBar placeholder={store.searchPlaceholder} />
         <div className="store-top__meta">
           <span>
             Bullseye Club
@@ -172,6 +160,21 @@ function DartChrome({ store, count }: { store: Store; count: number }) {
         </div>
       </header>
     </>
+  );
+}
+
+function SearchBar({
+  placeholder,
+  showGo = false,
+}: {
+  placeholder: string;
+  showGo?: boolean;
+}) {
+  return (
+    <div className="store-search" aria-hidden="true">
+      <span className="store-search__fake">{placeholder}</span>
+      {showGo ? <span className="store-search__go">Go</span> : null}
+    </div>
   );
 }
 

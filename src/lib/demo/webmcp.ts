@@ -3,8 +3,10 @@ import {
   addToCart,
   getCart,
   listProducts,
+  listStores,
   removeFromCart,
   searchProducts,
+  switchStore,
   type ShoppingMutators,
   type ShoppingState,
 } from "./tools";
@@ -42,6 +44,38 @@ export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void
 
   const tools: RegisteredTool[] = [
     {
+      name: "list_stores",
+      description:
+        "List the demo storefronts (nilemart, widemart, darthouse) and which one is currently open. Call this before switch_store if you do not know the storeId.",
+      inputSchema: { type: "object", properties: {} },
+      execute: async () => {
+        const snap = snapshot(live);
+        return listStores(snap.state);
+      },
+    },
+    {
+      name: "switch_store",
+      description:
+        "Open another storefront page in this demo. The shared cart is kept. Use when the shopper wants a different store, or when add_to_cart failed because the SKU is not on this page.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          storeId: {
+            type: "string",
+            enum: ["nilemart", "widemart", "darthouse"],
+            description:
+              "nilemart = marketplace (electronics), widemart = value/grocery, darthouse = home/style.",
+          },
+        },
+        required: ["storeId"],
+      },
+      execute: async (input) => {
+        const storeId = typeof input.storeId === "string" ? input.storeId : "";
+        const snap = snapshot(live);
+        return switchStore(snap.state, snap.mutators, storeId);
+      },
+    },
+    {
       name: "list_products",
       description:
         "List products on the current store page. Use this to read what this shop is selling right now.",
@@ -71,7 +105,7 @@ export function registerShoppingMcp(live: RefObject<LiveRef | null>): () => void
     {
       name: "add_to_cart",
       description:
-        "Add a SKU from the current store page to the shared cart. Fails if the SKU is not on this page.",
+        "Add a SKU from the current store page to the shared cart. Fails if the SKU is not on this page — call switch_store first, then retry.",
       inputSchema: {
         type: "object",
         properties: {

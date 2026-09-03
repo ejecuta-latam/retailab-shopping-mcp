@@ -4,7 +4,14 @@ import {
   cartTotalCents,
   removeLine,
 } from "./cart";
-import { getProduct, productsForStore, searchStoreProducts } from "./catalog";
+import {
+  getProduct,
+  getStore,
+  parseStoreId,
+  productsForStore,
+  searchStoreProducts,
+  STORES,
+} from "./catalog";
 import type { CartLine, StoreId, ToolResult } from "./types";
 
 export interface ShoppingState {
@@ -14,6 +21,51 @@ export interface ShoppingState {
 
 export interface ShoppingMutators {
   setCart: (cart: CartLine[]) => void;
+  setStoreId: (storeId: StoreId) => void;
+}
+
+export function listStores(state: ShoppingState): ToolResult {
+  return {
+    ok: true,
+    message: `${STORES.length} storefronts. Current: ${getStore(state.storeId).name}`,
+    data: {
+      currentStoreId: state.storeId,
+      stores: STORES.map((store) => ({
+        storeId: store.id,
+        name: store.name,
+        hostname: store.hostname,
+        current: store.id === state.storeId,
+      })),
+    },
+  };
+}
+
+export function switchStore(
+  state: ShoppingState,
+  mutators: ShoppingMutators,
+  storeIdRaw: string,
+): ToolResult {
+  const storeId = parseStoreId(storeIdRaw) ?? parseStoreId(storeIdRaw.replace(/-/g, ""));
+  if (!storeId) {
+    return {
+      ok: false,
+      message: "Unknown store. Use storeId nilemart, widemart, or darthouse.",
+    };
+  }
+  const store = getStore(storeId);
+  if (storeId === state.storeId) {
+    return {
+      ok: true,
+      message: `Already on ${store.name}`,
+      data: { storeId, hostname: store.hostname },
+    };
+  }
+  mutators.setStoreId(storeId);
+  return {
+    ok: true,
+    message: `Opened ${store.name}`,
+    data: { storeId, hostname: store.hostname },
+  };
 }
 
 export function listProducts(state: ShoppingState): ToolResult {
@@ -47,7 +99,8 @@ export function addToCart(
   if (!product || product.storeId !== state.storeId) {
     return {
       ok: false,
-      message: "SKU not on this page. Switch stores to shop another catalog.",
+      message:
+        "SKU not on this page. Call switch_store with the storeId that carries this SKU, then add_to_cart again.",
     };
   }
   const next = addLine(state.cart, product, quantity);

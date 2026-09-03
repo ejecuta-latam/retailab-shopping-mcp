@@ -291,12 +291,50 @@ export function findStoreForTags(tokens: string[]): StoreId | null {
 
 export function storeSuggestions(storeId: StoreId): string[] {
   if (storeId === "nilemart") {
-    return ["Add wireless headphones", "Find something under $30"];
+    return ["Add wireless headphones", "Go to WideMart"];
   }
   if (storeId === "widemart") {
-    return ["Add milk", "Add paper towels"];
+    return ["Add milk", "Go to DartHouse"];
   }
-  return ["Add a throw pillow", "Add the desk lamp"];
+  return ["Add a throw pillow", "Go to NileMart"];
+}
+
+const STORE_ALIASES: Record<string, StoreId> = {
+  nilemart: "nilemart",
+  nile: "nilemart",
+  "nile mart": "nilemart",
+  "nilemart.shop": "nilemart",
+  widemart: "widemart",
+  wide: "widemart",
+  "wide mart": "widemart",
+  "widemart.shop": "widemart",
+  darthouse: "darthouse",
+  dart: "darthouse",
+  "dart house": "darthouse",
+  "darthouse.shop": "darthouse",
+};
+
+export function parseStoreId(raw: string): StoreId | null {
+  const key = raw.trim().toLowerCase().replace(/\s+/g, " ");
+  return STORE_ALIASES[key] ?? null;
+}
+
+export function matchStoreInText(text: string): StoreId | null {
+  const lower = text.toLowerCase();
+  const needles: [string, StoreId][] = [
+    ["dart house", "darthouse"],
+    ["darthouse", "darthouse"],
+    ["nile mart", "nilemart"],
+    ["nilemart", "nilemart"],
+    ["wide mart", "widemart"],
+    ["widemart", "widemart"],
+  ];
+  for (const [needle, id] of needles) {
+    if (lower.includes(needle)) {
+      return id;
+    }
+  }
+  return null;
 }
 
 const STOP_WORDS = new Set([

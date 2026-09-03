@@ -24,7 +24,7 @@ export default function DemoShowcase() {
 
   liveRef.current = {
     state: { storeId, cart },
-    mutators: { setCart },
+    mutators: { setCart, setStoreId },
   };
 
   useEffect(() => {
@@ -46,11 +46,11 @@ export default function DemoShowcase() {
   const products = productsForStore(storeId);
 
   function handleAdd(skuId: string) {
-    addToCart({ storeId, cart }, { setCart }, skuId, 1);
+    addToCart({ storeId, cart }, { setCart, setStoreId }, skuId, 1);
   }
 
   function handlePrompt(prompt: string) {
-    const turn = runAgentTurn(prompt, { storeId, cart }, { setCart });
+    const turn = runAgentTurn(prompt, { storeId, cart }, { setCart, setStoreId });
     setLog((prev) => [...prev, ...turn.entries]);
   }
 
@@ -70,9 +70,8 @@ export default function DemoShowcase() {
         <p className="demo__kicker">Live showcase</p>
         <h2 id="demo-heading">Same tools. Every store. One cart.</h2>
         <p className="demo__support">
-          An agent reads the current storefront through the shopping-mcp profile,
-          then drops items into a shared cart. Switch pages — NileMart, WideMart,
-          DartHouse — and the basket stays put.
+          An agent reads the current storefront, can switch pages with{" "}
+          <code>switch_store</code>, then drops items into a shared cart.
         </p>
       </div>
 

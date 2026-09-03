@@ -26,7 +26,7 @@
 - As a **visitor**, I want to click between fictional storefronts so I can see that each page looks like a different shop.
 - As a **visitor**, I want to add an item on one store, switch stores, and still see it in the cart so I believe the cart is shared.
 - As a **visitor**, I want to type or tap a prompt in the agent panel so I can watch tools read the current page and add to the shared cart.
-- As a **real WebMCP agent** (ChatGPT in-app browser / Chrome with WebMCP), I want the same shopping-mcp tools registered on the page so I can list products and mutate the shared cart when the browser supports it.
+- As a **real WebMCP agent** (ChatGPT in-app browser / Chrome with WebMCP), I want the same shopping-mcp tools registered on the page so I can list products, **switch storefronts**, and mutate the shared cart when the browser supports it.
 
 ## 4. Scope
 
@@ -54,12 +54,13 @@
 5. Switching stores changes: fake browser URL, store chrome, product grid, agent “reading” context, and suggested prompts.
 6. Switching stores does **not** clear or rewrite the cart.
 7. Store tabs are a keyboard-accessible `tablist`.
+8. `switch_store` and clicking a tab use the same `setStoreId` mutation. Cart is unchanged.
 
 ### 5.3 Catalog
 
 8. Each store has its own product list (6 SKUs each). SKUs are unique across stores.
 9. The agent and `list_products` / `search_products` only return products for the **current** store.
-10. `add_to_cart` fails if the SKU is not in the current store’s catalog (agent must switch pages to shop another catalog).
+10. `add_to_cart` fails if the SKU is not in the current store’s catalog. The agent must `switch_store` to that catalog first (same function as clicking a store tab).
 
 ### 5.4 Shared cart
 
@@ -79,16 +80,19 @@
 18. The panel states it is using the shopping-mcp tools for the **current page**.
 19. Suggested prompts are store-aware (items that exist on that store).
 20. On submit:
-    1. Log `search_products` or `list_products` with the parsed query.
-    2. If matches exist and the prompt is an add/get/buy intent (or a single clear match with “add”), log `add_to_cart` and mutate the cart.
-    3. If no matches, do not mutate the cart; tell the visitor the item is not on this page and name a store that carries a matching tag when possible.
-21. Tool calls are shown in a monospace log (name + JSON args + short result).
-22. No network calls.
+    1. If the prompt names a store (`Go to WideMart`, `open darthouse`), log `switch_store` and change the selected page.
+    2. Else log `search_products` or `list_products` with the parsed query.
+    3. If matches exist and the prompt is an add/get/buy intent (or a single clear match with “add”), log `add_to_cart` and mutate the cart.
+    4. If no matches and another store carries the tags, log `switch_store` to that store, then search/add on the new page. Cart is kept.
+    5. If no matches anywhere, do not mutate the cart; say so.
+21. Suggested prompts include at least one `Go to <other store>` chip per store.
+22. Tool calls are shown in a monospace log (name + JSON args + short result).
+23. No network calls.
 
 ### 5.7 Native WebMCP (best-effort)
 
-23. On mount, if a model-context API exists, register: `list_products`, `search_products`, `add_to_cart`, `get_cart`, `remove_from_cart`.
-24. If it does not exist, the in-page demo still works. No error UI.
+24. On mount, if a model-context API exists, register: `list_stores`, `switch_store`, `list_products`, `search_products`, `add_to_cart`, `get_cart`, `remove_from_cart`.
+25. If it does not exist, the in-page demo still works. No error UI.
 
 ## 6. Interfaces & Data
 
@@ -133,6 +137,17 @@ interface ToolResult {
 
 ### 6.3 Tool contracts (shopping-mcp profile)
 
+**`list_stores`**
+- Input: `{}`
+- Output: `{ currentStoreId, stores: [{ storeId, name, hostname, current }] }`
+- Read-only.
+
+**`switch_store`**
+- Input: `{ storeId: "nilemart" | "widemart" | "darthouse" }` (also accept the display name, e.g. `"WideMart"`)
+- Success: `{ ok: true, message, data: { storeId, hostname } }` — selected tab, URL chrome, catalog, and agent context update. Cart unchanged.
+- Error: `{ ok: false, message: "Unknown store…" }` if the id/name is not one of the three.
+- Already on that store: `{ ok: true, message: "Already on …" }` — no visual flicker required.
+
 **`list_products`**
 - Input: `{}`
 - Output: `{ storeId, products: Product[] }` for the current store.
@@ -144,7 +159,7 @@ interface ToolResult {
 **`add_to_cart`**
 - Input: `{ skuId: string, quantity?: number }` (`quantity` default 1, min 1)
 - Success: `{ ok: true, message, cart: CartLine[] }`
-- Error: `{ ok: false, message: "SKU not on this page" }` if `skuId` is missing or belongs to another store.
+- Error: `{ ok: false, message }` if `skuId` is missing or belongs to another store. Message tells the caller to `switch_store` first.
 
 **`get_cart`**
 - Input: `{}`
@@ -166,13 +181,20 @@ add_to_cart({ "skuId": "nm-nilebuds", "quantity": 1 })
 → cart [{ skuId: "nm-nilebuds", storeId: "nilemart", quantity: 1, ... }]
 ```
 
-Visitor switches to WideMart. Cart still shows NileBuds. Prompt `Add milk`:
+Visitor on NileMart, agent prompt `Add milk` (item lives on WideMart):
 
 ```
-search_products({ "query": "milk" })
-→ [{ skuId: "wm-milk", name: "FairChoice 2% Milk", ... }]
+search_products({ "query": "Add milk" })
+→ []
+
+switch_store({ "storeId": "widemart" })
+→ UI shows WideMart; cart still has any NileMart lines
+
+search_products({ "query": "Add milk" })
+→ [{ skuId: "wm-milk", ... }]
+
 add_to_cart({ "skuId": "wm-milk" })
-→ cart has NileBuds + milk
+→ cart has items from both stores
 ```
 
 ### 6.5 Storefront fiction (visual aspects only)
@@ -187,8 +209,10 @@ add_to_cart({ "skuId": "wm-milk" })
 
 - Empty cart: show “Cart is empty. Add from this page — or let the agent do it.”
 - Agent prompt empty/whitespace: do not log a tool call; keep the input focused.
-- Agent prompt with no matches: explain that this page does not carry it; mention another store if a tag matches elsewhere.
-- `add_to_cart` for a foreign SKU: refuse; do not add.
+- Agent prompt with no matches anywhere: say so; do not switch.
+- Agent prompt `Go to WideMart` / `switch_store`: selected page becomes WideMart; cart unchanged.
+- `switch_store` with unknown id: refuse; stay on current page.
+- `add_to_cart` for a foreign SKU: refuse; do not add; do not auto-switch (only the in-page prompt runner may switch then retry). Native agents should call `switch_store` themselves.
 - Quantity below 1: remove the line.
 - `sessionStorage` unavailable or quota error: keep in-memory cart; do not crash.
 - Duplicate rapid adds: increment quantity, no duplicate lines.
@@ -219,7 +243,9 @@ add_to_cart({ "skuId": "wm-milk" })
 - [ ] Given the demo, when the visitor views DartHouse, then they see red/white clean chrome and DartHouse products — never the word Target.
 - [ ] Given an item added on NileMart, when the visitor switches to WideMart, then that item remains in the shared cart with a NileMart source pill.
 - [ ] Given that cart, when the visitor adds a WideMart item (click or agent), then the cart shows both lines and an updated subtotal.
-- [ ] Given the agent on NileMart and prompt “Add milk”, when submitted, then the cart does not gain milk and the log explains milk is not on this page.
+- [ ] Given the agent on NileMart and prompt “Add milk”, when submitted, then the log shows `switch_store` to WideMart, then `add_to_cart` for milk, and the selected tab is WideMart. Existing cart lines remain.
+- [ ] Given the agent on NileMart and prompt “Go to DartHouse”, when submitted, then the DartHouse tab is selected, the URL chrome shows darthouse.shop, and the cart is unchanged.
+- [ ] Given `switch_store` with storeId `nilemart` while already on NileMart, when called, then the result is ok and the page stays on NileMart.
 - [ ] Given the agent on WideMart and prompt “Add milk”, when submitted, then milk is added via `search_products` then `add_to_cart` visible in the log.
 - [ ] Given a cart with items, when the tab is reloaded, then the cart is restored from sessionStorage.
 - [ ] Given a product card, when “Add to cart” is clicked twice, then quantity becomes 2 on one line.
