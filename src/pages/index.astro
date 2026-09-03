@@ -2,9 +2,11 @@
 import Nav from "../components/Nav";
 import Banner from "../components/Banner";
 import DemoShowcase from "../components/demo/DemoShowcase";
+import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 import "../styles/landing.css";
 import "../styles/demo.css";
+import "../styles/footer.css";
 ---
 
 <html lang="en">
@@ -32,5 +34,6 @@ import "../styles/demo.css";
       <Banner client:load />
       <DemoShowcase client:load />
     </main>
+    <Footer />
   </body>
 </html>

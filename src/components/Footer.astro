@@ -1,0 +1,94 @@
+---
+import Logo from "./Logo.astro";
+
+type FooterLink = {
+  href: string;
+  label: string;
+  external?: boolean;
+};
+
+const product: FooterLink[] = [
+  { href: "/", label: "Home" },
+  { href: "/docs", label: "Docs" },
+  { href: "/#demo", label: "Demo" },
+];
+
+const company: FooterLink[] = [
+  { href: "https://github.com/ctrlProgrammer/retailab-shopping-mcp", label: "GitHub", external: true },
+  { href: "https://webmcp.devpost.com/", label: "WebMCP Challenge", external: true },
+];
+
+const legal: FooterLink[] = [
+  { href: "/license", label: "MIT License" },
+  { href: "/license.txt", label: "LICENSE (text)" },
+];
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div class="site-footer__brand">
+      <a class="site-footer__logo" href="/">
+        <Logo />
+        <span>retailab</span>
+      </a>
+      <p>
+        Lab for agent-native retail. Building <code>shopping-mcp</code> so people and agents
+        shop the aisle together.
+      </p>
+    </div>
+
+    <div class="site-footer__cols">
+      <div>
+        <h2>Product</h2>
+        <ul>
+          {
+            product.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div>
+        <h2>Company</h2>
+        <ul>
+          {
+            company.map((link) => (
+              <li>
+                <a
+                  href={link.href}
+                  target={link.external ? "_blank" : undefined}
+                  rel={link.external ? "noreferrer noopener" : undefined}
+                >
+                  {link.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <div>
+        <h2>Legal</h2>
+        <ul>
+          {
+            legal.map((link) => (
+              <li>
+                <a href={link.href}>{link.label}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="site-footer__bar">
+    <p>
+      © {year} retailab. Open source under <a href="/license">MIT</a>.
+    </p>
+    <p class="site-footer__product">shopping-mcp</p>
+  </div>
+</footer>

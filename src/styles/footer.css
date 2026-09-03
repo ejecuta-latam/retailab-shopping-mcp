@@ -1,0 +1,118 @@
+.site-footer {
+  margin-top: auto;
+  border-top: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.site-footer__inner {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  width: min(100% - 3rem, 72rem);
+  margin: 0 auto;
+  padding: 2.5rem 0 1.75rem;
+}
+
+.site-footer__brand {
+  max-width: 28rem;
+}
+
+.site-footer__logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--ink);
+}
+
+.site-footer__brand p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--mist);
+}
+
+.site-footer__brand code {
+  font-family: var(--font-display);
+  font-size: 0.86em;
+  color: var(--ink);
+}
+
+.site-footer__cols {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.site-footer__cols h2 {
+  margin: 0 0 0.75rem;
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mist);
+}
+
+.site-footer__cols ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.site-footer__cols a {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: -0.02em;
+}
+
+.site-footer__cols a:hover {
+  color: var(--accent);
+}
+
+.site-footer__bar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem 1.25rem;
+  width: min(100% - 3rem, 72rem);
+  margin: 0 auto;
+  padding: 1rem 0 1.5rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  color: var(--mist);
+}
+
+.site-footer__bar p {
+  margin: 0;
+}
+
+.site-footer__bar a {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.site-footer__bar a:hover {
+  color: var(--accent);
+}
+
+.site-footer__product {
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .site-footer__inner {
+    grid-template-columns: 1fr;
+  }
+}
