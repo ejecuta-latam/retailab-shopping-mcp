@@ -26,7 +26,7 @@ export default function SharedCart({ cart, onQuantity, onRemove }: SharedCartPro
 
       {cart.length === 0 ? (
         <p className="cart__empty">
-          Cart is empty. Add from this page — or let the agent do it.
+          Cart is empty. Add from this page.
         </p>
       ) : (
         <ul className="cart__list">

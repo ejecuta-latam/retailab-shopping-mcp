@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { runAgentTurn } from "../../lib/demo/agent";
 import {
   loadCart,
   saveCart,
@@ -10,8 +9,7 @@ import { getStore, productsForStore, STORES } from "../../lib/demo/catalog";
 import { addToCart } from "../../lib/demo/tools";
 import type { LiveRef } from "../../lib/demo/webmcp";
 import { registerShoppingMcp } from "../../lib/demo/webmcp";
-import type { AgentLogEntry, CartLine, StoreId } from "../../lib/demo/types";
-import AgentPanel from "./AgentPanel";
+import type { CartLine, StoreId } from "../../lib/demo/types";
 import SharedCart from "./SharedCart";
 import StorePage from "./StorePage";
 
@@ -19,7 +17,6 @@ export default function DemoShowcase() {
   const [storeId, setStoreId] = useState<StoreId>("nilemart");
   const [cart, setCart] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
-  const [log, setLog] = useState<AgentLogEntry[]>([]);
   const liveRef = useRef<LiveRef | null>(null);
 
   liveRef.current = {
@@ -47,11 +44,6 @@ export default function DemoShowcase() {
 
   function handleAdd(skuId: string) {
     addToCart({ storeId, cart }, { setCart, setStoreId }, skuId, 1);
-  }
-
-  function handlePrompt(prompt: string) {
-    const turn = runAgentTurn(prompt, { storeId, cart }, { setCart, setStoreId });
-    setLog((prev) => [...prev, ...turn.entries]);
   }
 
   function handleTabsKey(event: KeyboardEvent<HTMLDivElement>) {
@@ -137,12 +129,6 @@ export default function DemoShowcase() {
               setCart((prev) => setLineQuantity(prev, skuId, quantity))
             }
             onRemove={(skuId) => setCart((prev) => removeLine(prev, skuId))}
-          />
-          <AgentPanel
-            storeId={storeId}
-            storeName={store.name}
-            log={log}
-            onPrompt={handlePrompt}
           />
         </aside>
       </div>

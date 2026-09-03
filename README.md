@@ -10,7 +10,7 @@ Built for [The WebMCP Challenge](https://webmcp.devpost.com/).
 
 Agents should shop *with* the user — open options, ask which one, then add — not fill a cart from a search box behind the scenes.
 
-The **shared cart** in this demo is held by the page/agent trip: needs and picks across fictional storefronts. Each “store” page only exposes its own catalog to tools; the cart persists when you switch stores.
+The **shared cart** in this demo is held by the page: needs and picks across fictional storefronts. Each “store” page only exposes its own catalog to tools; the cart persists when you switch stores.
 
 ## WebMCP tools
 

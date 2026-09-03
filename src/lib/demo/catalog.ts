@@ -276,29 +276,6 @@ export function searchStoreProducts(storeId: StoreId, query: string): Product[] 
   });
 }
 
-export function findStoreForTags(tokens: string[]): StoreId | null {
-  if (tokens.length === 0) {
-    return null;
-  }
-  for (const product of PRODUCTS) {
-    const haystack = `${product.name} ${product.tags.join(" ")}`.toLowerCase();
-    if (tokens.some((token) => haystack.includes(token))) {
-      return product.storeId;
-    }
-  }
-  return null;
-}
-
-export function storeSuggestions(storeId: StoreId): string[] {
-  if (storeId === "nilemart") {
-    return ["Add wireless headphones", "Go to WideMart"];
-  }
-  if (storeId === "widemart") {
-    return ["Add milk", "Go to DartHouse"];
-  }
-  return ["Add a throw pillow", "Go to NileMart"];
-}
-
 const STORE_ALIASES: Record<string, StoreId> = {
   nilemart: "nilemart",
   nile: "nilemart",
@@ -317,24 +294,6 @@ const STORE_ALIASES: Record<string, StoreId> = {
 export function parseStoreId(raw: string): StoreId | null {
   const key = raw.trim().toLowerCase().replace(/\s+/g, " ");
   return STORE_ALIASES[key] ?? null;
-}
-
-export function matchStoreInText(text: string): StoreId | null {
-  const lower = text.toLowerCase();
-  const needles: [string, StoreId][] = [
-    ["dart house", "darthouse"],
-    ["darthouse", "darthouse"],
-    ["nile mart", "nilemart"],
-    ["nilemart", "nilemart"],
-    ["wide mart", "widemart"],
-    ["widemart", "widemart"],
-  ];
-  for (const [needle, id] of needles) {
-    if (lower.includes(needle)) {
-      return id;
-    }
-  }
-  return null;
 }
 
 const STOP_WORDS = new Set([
@@ -358,7 +317,7 @@ const STOP_WORDS = new Set([
   "the",
 ]);
 
-export function tokenize(query: string): string[] {
+function tokenize(query: string): string[] {
   return query
     .toLowerCase()
     .replace(/under\s*\$?\d+/g, " ")
@@ -367,7 +326,7 @@ export function tokenize(query: string): string[] {
     .filter((token) => token.length > 1 && !STOP_WORDS.has(token));
 }
 
-export function parseUnderBudget(query: string): number | null {
+function parseUnderBudget(query: string): number | null {
   const match = query.toLowerCase().match(/under\s*\$?(\d+)/);
   if (!match) {
     return null;

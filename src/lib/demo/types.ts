@@ -34,11 +34,3 @@ export interface ToolResult {
   message: string;
   data?: unknown;
 }
-
-export interface AgentLogEntry {
-  id: string;
-  kind: "tool" | "note";
-  toolName?: string;
-  args?: unknown;
-  result: string;
-}
