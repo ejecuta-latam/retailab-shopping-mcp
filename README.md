@@ -29,6 +29,8 @@ Implementation: [`src/lib/demo/webmcp.ts`](./src/lib/demo/webmcp.ts)
 
 | Tool | Role |
 | --- | --- |
+| `list_stores` | List storefronts and which page is open |
+| `switch_store` | Open NileMart, WideMart, or DartHouse (cart stays) |
 | `search_products` | Search the current store page catalog |
 | `list_products` | List products on the current store page |
 | `add_to_cart` | Add a SKU from this page to the shared cart |
@@ -68,4 +70,6 @@ Requires Node `>=22.12.0`.
 
 ## License
 
-[MIT](./LICENSE) © 2026 ctrlharmony
+[MIT](./LICENSE) © 2026 retailab
+
+Human-readable page: `/license` on the site. The root `LICENSE` file is what GitHub detects in the repository About section.

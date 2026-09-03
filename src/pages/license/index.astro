@@ -1,0 +1,57 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+
+const licenseText = `MIT License
+
+Copyright (c) 2026 retailab
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`;
+---
+
+<BaseLayout
+  title="License — retailab"
+  description="shopping-mcp and the retailab site are released under the MIT License."
+>
+  <main class="docs license-page">
+    <h1>License</h1>
+    <p>
+      <strong style="color: var(--ink); font-weight: 600;">shopping-mcp</strong> and this
+      website are open source under the <strong style="color: var(--ink); font-weight: 600;"
+        >MIT License</strong
+      >, copyright retailab (2026).
+    </p>
+    <p>
+      You may use, copy, modify, merge, publish, distribute, sublicense, and sell copies of
+      the software, provided the copyright notice and permission notice are included.
+    </p>
+    <p>
+      The same text ships as <code>LICENSE</code> at the root of the GitHub repository so
+      GitHub can detect it in the About section.
+    </p>
+
+    <h2>Full text</h2>
+    <pre class="license-page__text">{licenseText}</pre>
+
+    <p class="docs__note">
+      Plain text: <a href="/license.txt">/license.txt</a>
+      · Repo root: <code>LICENSE</code> (GitHub About)
+      · SPDX: <code>MIT</code>
+    </p>
+  </main>
+</BaseLayout>
