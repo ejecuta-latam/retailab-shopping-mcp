@@ -2,6 +2,7 @@
 import Nav from "../components/Nav";
 import Banner from "../components/Banner";
 import DemoShowcase from "../components/demo/DemoShowcase";
+import ExplainBanner from "../components/ExplainBanner";
 import Footer from "../components/Footer.astro";
 import "../styles/global.css";
 import "../styles/landing.css";
@@ -33,6 +34,7 @@ import "../styles/footer.css";
     <main>
       <Banner client:load />
       <DemoShowcase client:load />
+      <ExplainBanner client:load />
     </main>
     <Footer />
   </body>
