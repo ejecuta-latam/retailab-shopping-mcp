@@ -8,8 +8,8 @@
   --accent-soft: #d8f7e8;
   --accent-ink: #ffffff;
   --line: rgba(16, 36, 44, 0.1);
-  --font-display: "Syne", "Avenir Next", "Segoe UI", sans-serif;
-  --font-body: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+  --font-display: "JetBrains Mono", "SF Mono", "Consolas", monospace;
+  --font-body: "IBM Plex Sans", "Segoe UI", sans-serif;
   color-scheme: light;
 }
 

@@ -1,7 +1,8 @@
 ---
-import Nav from "../components/Nav.astro";
-import Banner from "../components/Banner.astro";
+import Nav from "../components/Nav";
+import Banner from "../components/Banner";
 import "../styles/global.css";
+import "../styles/landing.css";
 ---
 
 <html lang="en">
@@ -18,15 +19,15 @@ import "../styles/global.css";
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <title>shopping-mcp</title>
   </head>
   <body>
-    <Nav />
+    <Nav client:load />
     <main>
-      <Banner />
+      <Banner client:load />
     </main>
   </body>
 </html>
